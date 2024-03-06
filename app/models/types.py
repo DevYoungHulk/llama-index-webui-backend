@@ -6,6 +6,9 @@ import json
 from bson.json_util import dumps
 from mongoengine import *
 from llama_index.core.types import MessageRole
+from werkzeug.security import check_password_hash, generate_password_hash
+from flask_login import current_user, login_user, logout_user, login_required
+from flask_login import UserMixin
 
 
 def dict2obj(dic, objclass):
@@ -15,29 +18,47 @@ def dict2obj(dic, objclass):
     return json.loads(dumps(dic), object_hook=objclass)
 
 
+class User(UserMixin, Document):
+    id = UUIDField(primary_key=True, binary=False, default=uuid.uuid4)
+    username = StringField(required=True, unique=True)
+    password = StringField(required=True)
+    meta = {'collection': 'users'}
+
+    def get_id(self):
+        return self.username
+
+    def update_password(self, password):
+        self.password = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password, password)
+    
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, 
+            sort_keys=True, indent=4)
+
+
 class File(Document):
-    id = UUIDField(primary_key=True, binary=True)
+    id = UUIDField(primary_key=True, binary=False, default=uuid.uuid4)
     file_name = StringField(max_length=100, required=True)
     root_path = StringField(max_length=100, required=True)
-    file_path = StringField(max_length=100, required=True)
-    file_full_path = StringField(max_length=100, required=True)
-    temp_path = StringField(max_length=100, required=True)
-    temp_full_path = StringField(max_length=100, required=True)
     md5 = StringField(max_length=100, required=True)
     user_id = StringField(max_length=100, required=True)
     indexed = BooleanField(required=False)
 
-    def __init__(self, file_name, root_path, user_id, *args, **kwargs):
-        super(File, self).__init__(*args, **kwargs)
-        self.user_id = user_id
-        self.file_name = file_name
-        self.root_path = root_path
+    meta = {'collection': 'files'}
 
-        self.temp_path = os.path.join(root_path, 'cache', user_id)
-        self.temp_full_path = os.path.join(self.temp_path, self.id)
+    def get_temp_path(self):
+        return os.path.join(self.root_path, 'cache', self.user_id)
 
-        self.file_path = os.path.join(root_path, user_id)
-        self.file_full_path = os.path.join(self.file_path, self.id)
+    def get_temp_full_path(self):
+        return os.path.join(self.get_temp_path(), str(self.id))
+
+    def get_file_path(self):
+        return os.path.join(self.root_path, self.user_id)
+
+    def get_file_full_path(self):
+        return os.path.join(self.get_file_path(), str(self.id))
 
     def to_dict(self):
         return json.loads(self.to_json())
@@ -49,13 +70,7 @@ class ChatHistory(Document):
     role = EnumField(MessageRole, required=True)
     content = StringField(required=True)
     date = StringField(required=True)
-
-    def __init__(self, user_id, role, content, date, *args, **values):
-        super().__init__(*args, **values)
-        self.user_id = user_id
-        self.role = role
-        self.content = content
-        self.date = date
+    meta = {'collection': 'chat_history'}
 
     def to_dict(self):
         return json.loads(self.to_json())

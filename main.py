@@ -1,50 +1,23 @@
-from app import creat_app
-import os
-
+from app import create_app
+import traceback
+from flask import jsonify
+import logging
 # 默认为开发环境，按需求修改
 config_name = 'development'
 
-app = creat_app(config_name)
+app = create_app(config_name)
+
+logger = logging.getLogger('root')
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    traceback_text = traceback.format_exc()
+    error_message = {'msg': str(e), 'traceback': traceback_text}
+    logger.error(error_message)
+    response = jsonify(error_message)
+    response.status_code = 500 if isinstance(e, Exception) else 400
+    return response
+
 
 if __name__ == '__main__':
     app.run()
-
-
-# from flask import Flask, Request, request
-
-# app = Flask(__name__)
-
-
-# @app.before_request
-# def hook():
-#     # request - flask.request
-#     print('endpoint: %s, url: %s, path: %s' % (
-#         request.endpoint,
-#         request.url,
-#         request.path))
-#     # just do here everything what you need...
-#     print('------ 0 a='+request.args['a'])
-#     if request.args['a'] == '1':
-#         print(' --------- a=1')
-#         return 'cus system error',500
-
-
-# class Middleware:
-
-#     def __init__(self, app):
-#         self.app = app
-
-#     def __call__(self, environ, start_response):
-#         # not Flask request - from werkzeug.wrappers import Request
-#         request = Request(environ)
-#         print('Middleware path: %s, url: %s' % (request.path, request.url))
-#         # just do here everything what you need
-#         return self.app(environ, start_response)
-
-
-# app.wsgi_app = Middleware(app.wsgi_app)
-
-
-# @app.route("/")
-# def hello_world():
-#     return "<p>Hello, World!</p>"

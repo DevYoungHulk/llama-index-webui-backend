@@ -15,18 +15,41 @@ class Config:
 
 # 开发环境
 class DevelopmentConfig(Config):
-    MONGO_URI = 'mongodb://root:example@127.0.0.1:27017/llama-index-dev?authSource=admin'
-    # SQLALCHEMY_DATABASE_URI = 'mysql://root:password@localhost:3306/dev-database'
+    MONGO_DB_NAME = 'llama-index-dev'
+    MONGO_USERNAME = 'root'
+    MONGO_PASSWORD = 'example'
+    MONGO_HOST = '127.0.0.1:27017'
+    MONGO_URI = 'mongodb://%s:%s@%s/%s?authSource=admin' % (
+        MONGO_USERNAME, MONGO_PASSWORD, MONGO_HOST, MONGO_DB_NAME)
+
+    SECRET_KEY = 'a8ef2798c4e84a0744da509c5da07e30'
+    JWT_SECRET_KEY = 'ydYdTpdGaF5KnPcPa_UeARTgEIzzpXjemQ8rnZ9ZhFA'
 
 
 # 测试环境
 class TestingConfig(Config):
-    SQLALCHEMY_DATABASE_URI = 'mysql://root:password@localhost:3306/test-database'
+    MONGO_DB_NAME = os.environ.get('MONGO_DB_NAME')
+    MONGO_USERNAME = os.environ.get('MONGO_USERNAME')
+    MONGO_PASSWORD = os.environ.get('MONGO_PASSWORD')
+    MONGO_HOST = os.environ.get('MONGO_HOST')
+    MONGO_URI = 'mongodb://%s:%s@%s/%s?authSource=admin' % (
+        MONGO_USERNAME, MONGO_PASSWORD, MONGO_HOST, MONGO_DB_NAME)
+
+    SECRET_KEY = os.environ.get('SECRET_KEY')
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
 
 
 # 生产环境
 class ProductionConfig(Config):
-    SQLALCHEMY_DATABASE_URI = 'mysql://root:password@localhost:3306/product-database'
+    MONGO_DB_NAME = os.environ.get('MONGO_DB_NAME')
+    MONGO_USERNAME = os.environ.get('MONGO_USERNAME')
+    MONGO_PASSWORD = os.environ.get('MONGO_PASSWORD')
+    MONGO_HOST = os.environ.get('MONGO_HOST')
+    MONGO_URI = 'mongodb://%s:%s@%s/%s?authSource=admin' % (
+        MONGO_USERNAME, MONGO_PASSWORD, MONGO_HOST, MONGO_DB_NAME)
+
+    SECRET_KEY = os.environ.get('SECRET_KEY')
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
 
 
 # config dict

@@ -15,6 +15,10 @@ mongoengine==0.27.0
 Flask-PyMongo==2.3.0
 
 flask-login==0.6.3
+flask-jwt-extended==4.6.0
 # install dependencies before mysql-client for python3 on ubuntu
 # sudo apt-get install python3-dev default-libmysqlclient-dev build-essential pkg-config
 # mysqlclient==2.2.4
+
+pyOpenSSL==24.0.0
+secrets==1.0.2

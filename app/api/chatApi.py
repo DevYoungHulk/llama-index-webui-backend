@@ -2,17 +2,21 @@
 from datetime import datetime
 from llama_index.core.types import MessageRole
 from ..models.types import *
-from ..db import db
 from flask import Blueprint, request
 import logging
-from bson.json_util import dumps, loads
 from ..services.chat_context import get_gloabl_chat_agent_instance
+from flask_jwt_extended import jwt_required, get_jwt_identity
+
 chat = Blueprint('chat', __name__)
 logger = logging.getLogger('root')
 
 
-@chat.route('/<user_id>', methods=['POST'])
-def chat_(user_id):
+@chat.route('/', methods=['POST'])
+@jwt_required()
+def chat_():
+    user_id = get_jwt_identity()
+    if not user_id:
+        raise ValueError("User ID is required.")
     question = request.json['question']
     date_q = datetime.now(
         pytz.timezone('Asia/Shanghai')).isoformat()
@@ -32,8 +36,10 @@ def chat_(user_id):
     return {'msg': 'success', 'data': answer}, 200
 
 
-@chat.route('/history/<user_id>', methods=['GET'])
-def get_history(user_id):
+@chat.route('/history', methods=['GET'])
+@jwt_required()
+def get_history():
+    user_id = get_jwt_identity()
     res = ChatHistory.objects(user_id=user_id)
     result = []
     for i in res:
@@ -41,8 +47,10 @@ def get_history(user_id):
     return {'msg': 'success', 'data': result}, 200
 
 
-@chat.route('/clear/<user_id>', methods=['POST'])
-def clear_history(user_id):
+@chat.route('/clear', methods=['POST'])
+@jwt_required()
+def clear_history():
+    user_id = get_jwt_identity()
     res = ChatHistory.objects(user_id=user_id).delete()
     logger.info(res)
     agents = get_gloabl_chat_agent_instance().global_agents

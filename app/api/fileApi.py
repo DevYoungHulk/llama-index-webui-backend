@@ -2,23 +2,38 @@
 from flask import Blueprint, request
 import logging
 from ..services.file_management import delete, list_all, add
-from bson.json_util import dumps, loads
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 file = Blueprint('file', __name__)
 logger = logging.getLogger('root')
 
 
-@file.route('/<user_id>/list', methods=['GET'])
-def list_file(user_id):
-    return list_all(user_id)
+@file.route('/list', methods=['GET'])
+@jwt_required()
+def list_file():
+    current_user = get_jwt_identity()
+    if current_user:
+        return list_all(current_user)
+    else:
+        return {"msg": "user not found"}, 401
 
 
-@file.route('/<user_id>/<file_id>', methods=['DELETE'])
-def delete_file(user_id, file_id):
-    return delete(user_id, file_id)
+@file.route('/<file_id>', methods=['DELETE'])
+@jwt_required()
+def delete_file(file_id):
+    current_user = get_jwt_identity()
+    if current_user:
+        return delete(current_user, file_id)
+    else:
+        return {"msg": "user not found"}, 401
 
 
-@file.route('/<user_id>/add', methods=['POST'])
-def add_file(user_id):
-    file = request.files['file']
-    return add(file, user_id)
+@file.route('/add', methods=['POST'])
+@jwt_required()
+def add_file():
+    current_user = get_jwt_identity()
+    if current_user:
+        file = request.files['file']
+        return add(file, current_user)
+    else:
+        return {"msg": "user not found"}, 401

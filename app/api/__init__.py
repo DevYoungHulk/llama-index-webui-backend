@@ -1,11 +1,13 @@
 from .indexApi import index
 from .fileApi import file
 from .chatApi import chat
+from .userApi import user
 
 DEFAULT_BLUEPRINT = [
     (index, '/api/index'),
     (file, '/api/file'),
-    (chat, '/api/chat')
+    (chat, '/api/chat'),
+    (user, '/api/user')
 ]
 
 
