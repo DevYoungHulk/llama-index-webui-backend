@@ -2,7 +2,7 @@ from flask_login import login_user, logout_user
 from flask import Blueprint, request
 import logging
 from ..models.types import User
-from flask_jwt_extended import jwt_required, create_access_token
+from flask_jwt_extended import jwt_required, create_access_token, create_refresh_token, get_jwt_identity
 
 user = Blueprint('user', __name__)
 logger = logging.getLogger('root')
@@ -35,8 +35,21 @@ def login():
     if user and user.check_password(password):
         login_user(user)
         access_token = create_access_token(identity=user.id)
-        return {'message': 'Login successful', 'token': access_token}, 200
+        refresh_token = create_refresh_token(identity=user.id)
+        return {'message': 'Login successful', 'token': access_token, 'refresh_token': refresh_token}, 200
     return {'message': 'Invalid username or password'}, 401
+
+
+@user.route('/refresh', methods=['POST'])
+@jwt_required(refresh=True)
+def refresh():
+    # Refresh the access token using the refresh token
+    current_user = get_jwt_identity()
+    if current_user:
+        access_token = create_access_token(identity=current_user)
+        refresh_token = create_refresh_token(identity=current_user)
+        return {'message': 'Login successful', 'token': access_token, 'refresh_token': refresh_token}, 200
+    return {'message': 'Invalid token'}, 401
 
 
 @user.route('/logout')

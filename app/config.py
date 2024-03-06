@@ -24,6 +24,8 @@ class DevelopmentConfig(Config):
 
     SECRET_KEY = 'a8ef2798c4e84a0744da509c5da07e30'
     JWT_SECRET_KEY = 'ydYdTpdGaF5KnPcPa_UeARTgEIzzpXjemQ8rnZ9ZhFA'
+    JWT_ACCESS_TOKEN_EXPIRES = 43200  # Expires in 12 hour
+    JWT_REFRESH_TOKEN_EXPIRES = 2592000  # 30 days
 
 
 # 测试环境
@@ -37,6 +39,8 @@ class TestingConfig(Config):
 
     SECRET_KEY = os.environ.get('SECRET_KEY')
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
+    JWT_ACCESS_TOKEN_EXPIRES = 3600  # Expires in 1 hour
+    JWT_REFRESH_TOKEN_EXPIRES = 2592000  # 30 days
 
 
 # 生产环境
@@ -50,6 +54,8 @@ class ProductionConfig(Config):
 
     SECRET_KEY = os.environ.get('SECRET_KEY')
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
+    JWT_ACCESS_TOKEN_EXPIRES = 3600  # Expires in 1 hour
+    JWT_REFRESH_TOKEN_EXPIRES = 2592000  # 30 days
 
 
 # config dict
