@@ -12,8 +12,9 @@ logger = logging.getLogger('root')
 @app.errorhandler(Exception)
 def handle_exception(e):
     traceback_text = traceback.format_exc()
-    error_message = {'msg': str(e), 'traceback': traceback_text}
+    error_message = {'msg': str(e)}
     logger.error(error_message)
+    logger.error(traceback_text)
     response = jsonify(error_message)
     response.status_code = 500 if isinstance(e, Exception) else 400
     return response

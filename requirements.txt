@@ -6,6 +6,10 @@ motor==3.3.2
 llama-index-graph-stores-neo4j==0.1.2
 llama-index-embeddings-ollama==0.1.2
 
+llama-index-readers-file
+llama-index-readers-confluence
+llama-index-readers-smart-pdf-loader
+
 cryptography==42.0.5
 
 Flask==3.0.2

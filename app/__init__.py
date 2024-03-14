@@ -41,7 +41,7 @@ def create_app(DevelopmentConfig):
         config_blueprint(app)
     except NotFound:
         # 这里举例处理找不到蓝图或扩展的情况
-        print("加载蓝图或扩展失败，确保它们已正确定义")
+        logger.error("加载蓝图或扩展失败，确保它们已正确定义")
         raise
 
     return app
