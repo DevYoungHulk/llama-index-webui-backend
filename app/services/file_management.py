@@ -1,7 +1,7 @@
 import logging
 import os
 import hashlib
-from ..models.types import *
+from app.models.types import *
 logger = logging.getLogger('root')
 
 ALLOWED_EXTENSIONS = set(['pdf', 'txt', 'md'])

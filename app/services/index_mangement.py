@@ -1,18 +1,23 @@
 import logging
-from .mongo_storage import get_vector_storage, get_summary_storage
-from llama_index.core.node_parser import SentenceSplitter
+from .mongo_storage import *
+from llama_index.core.node_parser import SentenceSplitter, SentenceWindowNodeParser
 from llama_index.core import download_loader, load_index_from_storage
-from llama_index.core import VectorStoreIndex, SummaryIndex, DocumentSummaryIndex
+from llama_index.core import VectorStoreIndex, SummaryIndex, KnowledgeGraphIndex
 from llama_index.core.tools import QueryEngineTool, ToolMetadata
 from llama_index.readers.confluence import ConfluenceReader
 from llama_index.readers.file.markdown import MarkdownReader
 from llama_index.readers.file.pymu_pdf import PyMuPDFReader
 from .chat_context import get_gloabl_chat_agent_instance
-from ..models.types import *
-from typing import Union
+from app.models.types import *
+from typing import Union, Tuple
 logger = logging.getLogger('root')
 
-node_parser = SentenceSplitter(chunk_size=512)
+# node_parser = SentenceSplitter(chunk_size=1024, chunk_overlap=20)
+node_parser = SentenceWindowNodeParser.from_defaults(
+    window_size=3,
+    window_metadata_key="window",
+    original_text_metadata_key="original_text",
+)
 
 
 def configLoader(loaderName, config: ConfuluenceLoaderConfig = None):
@@ -107,6 +112,12 @@ def remove_index(user_id, file_id):
     except Exception as e:
         logger.error(e)
         return {'msg': 'summary index not found'}
+    knowledge_storage = get_knowledge_storage(user_id)
+    try:
+        knowledgeStoreIndex = load_index_from_storage(knowledge_storage)
+    except Exception as e:
+        logger.error(e)
+        return {'msg': 'knowledge index not found'}
     file: None | BaseFile = BaseFile.objects(
         user_id=user_id, id=file_id).first()
     if not file:
@@ -122,6 +133,7 @@ def remove_index(user_id, file_id):
         for doc_id in file.ref_doc_ids:
             vectorStoreIndex.delete_ref_doc(doc_id, True)
             summaryStoreIndex.delete_ref_doc(doc_id, True)
+            knowledgeStoreIndex.delete_ref_doc(doc_id, True)
         # vectorStoreIndex.delete(file['doc_id'])
         vetor_storage.persist()
         file.indexed = False
@@ -132,9 +144,51 @@ def remove_index(user_id, file_id):
         return {'msg': 'remove success', 'data': file.to_dict()}
 
 
+def lockFile(user_id, file_id) -> Tuple[bool, str]:
+    file: None | BaseFile = BaseFile.objects(
+        user_id=user_id, id=file_id).first()
+    if not file:
+        return False, 'file not exsit'
+    elif file.indexed:
+        return False, 'file already indexed'
+    else:
+        file.indexing = True
+        file.save()
+        return True, None
+
+
+def unlockFile(user_id, file_id) -> Tuple[bool, str]:
+    file: None | BaseFile = BaseFile.objects(
+        user_id=user_id, id=file_id).first()
+    if not file:
+        return False, 'file not exsit'
+    elif file.indexed:
+        return False, 'file already indexed'
+    else:
+        file.indexing = False
+        file.save()
+        return True, None
+
+
+def islockedFile(user_id, file_id) -> Tuple[bool, str]:
+    file: None | BaseFile = BaseFile.objects(
+        user_id=user_id, id=file_id).first()
+    if not file:
+        return False, 'file not exsit'
+    else:
+        return file.indexing, None
+
+
 def add_index(user_id, file_id):
+    lock, msg = islockedFile(user_id, file_id)
+    if lock:
+        return {'msg': msg}
+    locked, msg = lockFile(user_id, file_id)
+    if not locked:
+        return {'msg': msg}
     vetor_storage = get_vector_storage(user_id)
     summary_storage = get_summary_storage(user_id)
+    knowledge_storage = get_knowledge_storage(user_id)
     try:
         vectorStoreIndex = load_index_from_storage(vetor_storage)
     except Exception as e:
@@ -149,6 +203,13 @@ def add_index(user_id, file_id):
         logger.error(e)
         summaryStoreIndex = SummaryIndex.from_documents(
             documents=[], storage_context=summary_storage, show_progress=True)
+    try:
+        knowledgeStoreIndex = load_index_from_storage(knowledge_storage)
+    except Exception as e:
+        logger.error('add_index load knowledgeStoreIndex error')
+        logger.error(e)
+        knowledgeStoreIndex = KnowledgeGraphIndex.from_documents(
+            documents=[], storage_context=knowledge_storage, show_progress=True)
     file: None | BaseFile = BaseFile.objects(
         user_id=user_id, id=file_id).first()
     if not file:
@@ -166,13 +227,17 @@ def add_index(user_id, file_id):
         vetor_storage.persist()
         summaryStoreIndex.insert_nodes(nodes)
         summary_storage.persist()
+        knowledgeStoreIndex.build_index_from_nodes(nodes)
+        knowledge_storage.persist()
         file.indexed = True
         file.node_ids = node_ids
         file.ref_doc_ids = ref_doc_ids
         file.save()
         get_gloabl_chat_agent_instance().refreshAgent(user_id)
+        unlockFile(user_id, file_id)
         return {'msg': 'index success', 'data': file.to_dict()}
     else:
+        unlockFile(user_id, file_id)
         return {'msg': 'index exist', 'data': file.to_dict()}
 
 

@@ -9,3 +9,6 @@ python generate_secret.py
 # Run
 docker compose up -d  # start database
 python main.py # start backend
+
+celery -A app.celery_tasks.celery_app worker # start celery tasks worker
+celery -A app.celery_tasks.celery_app flower # start flower for monitor celery tasks

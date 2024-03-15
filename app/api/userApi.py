@@ -1,7 +1,7 @@
 from flask_login import login_user, logout_user
 from flask import Blueprint, request
 import logging
-from ..models.types import User
+from app.models.types import User
 from flask_jwt_extended import jwt_required, create_access_token, create_refresh_token, get_jwt_identity
 
 user = Blueprint('user', __name__)

@@ -7,12 +7,13 @@ from bson import json_util
 from .log import setup_custom_logger
 from mongoengine import connect
 from werkzeug.exceptions import NotFound
+from celery import Celery
 
 logger = setup_custom_logger('root')
 logger.info('logger inited')
 
 
-def create_app(DevelopmentConfig):
+def create_app(config_name):
 
     # 实例化 app
     app = Flask(__name__)
@@ -22,7 +23,13 @@ def create_app(DevelopmentConfig):
     # 给app添加配置，用于全局try catch,在捕获异常的时候返回一个json格式的错误信息
 
     # 加载配置项
-    app.config.from_object(config.get(DevelopmentConfig))
+    app.config.from_object(config.get(config_name))
+    # print('--------__name__--------')
+    # print(__name__)
+    # celery_app = Celery(__name__, broker='redis://127.0.0.1:6379/0',
+    #                     backend='redis://127.0.0.1:6379/0')
+    # # celery_app.config_from_object('app.celery_tasks.celeryconfig')
+    # celery_app.set_current()
 
     try:
         # 连接MongoDB，使用异常处理避免应用崩溃

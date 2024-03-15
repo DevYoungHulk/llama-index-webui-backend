@@ -49,6 +49,7 @@ class BaseFile(Document):
     # normal_file = EmbeddedDocumentField(NormalFile, required=False)
     # confuluence = EmbeddedDocumentField(Confuluence, required=False)
     indexed = BooleanField(required=False)
+    indexing = BooleanField(required=False)
     node_ids = ListField(required=False)
     ref_doc_ids = ListField(required=False)
 
@@ -92,7 +93,7 @@ class NormalFile(BaseFile):
 class BaseLoaderConfig(Document):
     id = UUIDField(primary_key=True, binary=False, default=uuid.uuid4)
     user_id = StringField(max_length=100, required=True)
-    meta = {'collection': 'confluences_loader_config',
+    meta = {'collection': 'llm_configs',
             'allow_inheritance': True}
     
     def to_dict(self):

@@ -32,8 +32,53 @@ services:
     # mounting a named volume to the container to track db data
     volumes:
       - neo4j-data:/data/
+      - neo4j-import:/var/lib/neo4j/import/
+      - neo4j-plugins:/var/lib/neo4j/plugins/
     env_file:
       - .env.neo4j
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
+    environment:
+      # REDIS_PASSWORD: my-password
+      REDIS_PORT: 6379
+    volumes:
+      - redis-data:/data
+      - redis-conf:/usr/local/etc/redis/
+  worker:
+    build: ./
+    entrypoint: celery
+    command: -A app.celery_tasks.celery_app worker -l info -E
+    user: nobody
+    volumes:
+      - celery-data:/data
+    environment:
+      CELERY_BROKER_URL: mongodb://root:example@mongo:27017/llama-index-dev?authSource=admin
+      CELERY_RESULT_BACKEND: mongodb://root:example@mongo:27017/llama-index-dev?authSource=admin
+      PYTHONPATH: /data
+    depends_on:
+      - mongo
+  flower:
+    build: ./
+    command: celery -A app.celery_tasks.celery_app flower
+    volumes:
+      - flower-data:/data
+    working_dir: /data
+    ports:
+      - 5555:5555
+    environment:
+      CELERY_BROKER_URL: mongodb://root:example@mongo:27017/llama-index-dev?authSource=admin
+      CELERY_RESULT_BACKEND: mongodb://root:example@mongo:27017/llama-index-dev?authSource=admin
+    depends_on:
+      - worker
+      - mongo
 volumes:
   db-data: {}
   neo4j-data: {}
+  neo4j-plugins: {}
+  neo4j-import: {}
+  redis-data: {}
+  redis-conf: {}
+  celery-data: {}
+  flower-data: {}

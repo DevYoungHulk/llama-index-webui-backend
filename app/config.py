@@ -7,6 +7,8 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 class Config:
     SECRET_KEY = os.environ.get('KEY') or '123456'
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
+    SEND_FILE_MAX_AGE_DEFAULT = 300
+    timeout = 300
 
     # 数据库规则
     # SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -15,6 +17,7 @@ class Config:
 
 # 开发环境
 class DevelopmentConfig(Config):
+    timeout = 6000
     MONGO_DB_NAME = 'llama-index-dev'
     MONGO_USERNAME = 'root'
     MONGO_PASSWORD = 'example'
@@ -26,6 +29,10 @@ class DevelopmentConfig(Config):
     JWT_SECRET_KEY = 'ydYdTpdGaF5KnPcPa_UeARTgEIzzpXjemQ8rnZ9ZhFA'
     JWT_ACCESS_TOKEN_EXPIRES = 43200  # Expires in 12 hour
     JWT_REFRESH_TOKEN_EXPIRES = 2592000  # 30 days
+
+    CELERY_BROKER_URL = 'mongodb://%s:%s@%s/%s?authSource=admin' % (
+        MONGO_USERNAME, MONGO_PASSWORD, MONGO_HOST, 'celery')
+    CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 
 
 # 测试环境
@@ -41,6 +48,8 @@ class TestingConfig(Config):
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
     JWT_ACCESS_TOKEN_EXPIRES = 3600  # Expires in 1 hour
     JWT_REFRESH_TOKEN_EXPIRES = 2592000  # 30 days
+    CELERY_BROKER_URL = ''
+    CELERY_RESULT_BACKEND = ''
 
 
 # 生产环境
@@ -56,6 +65,8 @@ class ProductionConfig(Config):
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
     JWT_ACCESS_TOKEN_EXPIRES = 3600  # Expires in 1 hour
     JWT_REFRESH_TOKEN_EXPIRES = 2592000  # 30 days
+    CELERY_BROKER_URL = ''
+    CELERY_RESULT_BACKEND = ''
 
 
 # config dict

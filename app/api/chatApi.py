@@ -1,10 +1,10 @@
 
 from datetime import datetime
 from llama_index.core.types import MessageRole
-from ..models.types import *
+from app.models.types import *
 from flask import Blueprint, request
 import logging
-from ..services.chat_context import get_gloabl_chat_agent_instance
+from app.services.chat_context import get_gloabl_chat_agent_instance
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 chat = Blueprint('chat', __name__)

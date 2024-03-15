@@ -1,9 +1,9 @@
 
 from flask import Blueprint, request
 import logging
-from ..services.file_management import delete, list_all, add
+from app.services.file_management import delete, list_all, add
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from ..models.types import FileType
+from app.models.types import FileType
 file = Blueprint('file', __name__)
 logger = logging.getLogger('root')
 
