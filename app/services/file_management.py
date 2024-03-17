@@ -64,7 +64,7 @@ def add(user_id, type, file):
             return {'msg': 'upload successed', 'data': f.to_dict()}
     elif type == FileType.CONFLUENCE.value:
         if Confuluence.objects(user_id=user_id, group_key=file['group_key']).first():
-            return {'msg': 'Confuluence duplicate'}
+            return {'msg': 'Confuluence group_key duplicate'}
         else:
             confuluence = Confuluence(
                 user_id=user_id,
