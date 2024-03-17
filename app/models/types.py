@@ -108,6 +108,7 @@ class ConfuluenceLoaderConfig(BaseLoaderConfig):
     # client_id = StringField(max_length=100, required=False)
 
 
+from llama_index.core.types import ChatMessage
 
 class ChatHistory(Document):
     id = UUIDField(primary_key=True, binary=False, default=uuid.uuid4)
@@ -119,3 +120,9 @@ class ChatHistory(Document):
 
     def to_dict(self):
         return json.loads(self.to_json())
+    
+    def toChatMessage(self):
+        return ChatMessage(
+            role=self.role,
+            content=self.content,
+        )

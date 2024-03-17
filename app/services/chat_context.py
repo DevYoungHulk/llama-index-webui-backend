@@ -8,19 +8,20 @@ from llama_index.llms.openai import OpenAI
 from llama_index.core import VectorStoreIndex, SummaryIndex, KnowledgeGraphIndex
 from llama_index.embeddings.ollama import OllamaEmbedding
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-
+from app.models.types import ChatHistory, MessageRole
 from .mongo_storage import *
 import pymongo
 import logging
 logger = logging.getLogger('root')
+from mongoengine import QuerySet
 
 
 class GloablChatAgent:
     global_agents = {}
 
-    model = "mistral:7b"  # mistral llama2
-    llm = Ollama(temperature=0.1, model=model, request_timeout=300.0)
-    # llm = OpenAI(temperature=0.1, model="gpt-3.5-turbo")
+    # model = "mistral:7b"  # mistral llama2
+    # llm = Ollama(temperature=0.1, model=model, request_timeout=3000.0)
+    llm = OpenAI(temperature=0.1, model="gpt-3.5-turbo")
 
     def __init__(self) -> None:
         # node_parser = SentenceSplitter(chunk_size=512)
@@ -40,13 +41,10 @@ class GloablChatAgent:
     def getAgent(self, user_id, refresh=False):
         if user_id in self.global_agents and not refresh:
             return self.global_agents[user_id]
-
-        histories = ChatMessage.objects(user_id= user_id).sort(
-            [('date', pymongo.ASCENDING)])
+        histories: QuerySet[ChatHistory] = ChatHistory.objects(user_id=user_id).order_by('date')
         chat_history = []
         for h in histories:
-            chat_history.append(ChatMessage(
-                role=h['role'], content=h['content']))
+            chat_history.append(h.toChatMessage())
         tools = self.loadQueryEngineTool(user_id)
         logger.info('tools -> '+str(len(tools)))
         for t in tools:
@@ -92,8 +90,7 @@ class GloablChatAgent:
             logger.error(e)
             knowledge_index = KnowledgeGraphIndex.from_documents(
                 documents=[], storage_context=knowledge_storage, show_progress=True)
-            
-        
+
         return [
             # QueryEngineTool(
             # query_engine=vectorStoreIndex.as_chat_engine(),
@@ -113,16 +110,16 @@ class GloablChatAgent:
             #     description='This tool is used to query all summary of documents',
             # )),
             QueryEngineTool(
-            query_engine=knowledge_index.as_chat_engine(
-                include_text=True,
-                response_mode="refine",
-                embedding_mode="hybrid",
-                similarity_top_k=100
-            ),
-            metadata=ToolMetadata(
-                name="knowledge_tool",
-                description='This tool is used to query all knowledge of documents',
-            )),
+                query_engine=knowledge_index.as_chat_engine(
+                    include_text=True,
+                    response_mode="refine",
+                    embedding_mode="hybrid",
+                    similarity_top_k=100
+                ),
+                metadata=ToolMetadata(
+                    name="knowledge_tool",
+                    description='This tool is used to query all knowledge of documents',
+                )),
         ]
 
 

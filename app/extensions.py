@@ -26,8 +26,8 @@ def config_extensions(app):
 
 
 text_splitter = SentenceSplitter()
-# llm = OpenAI(temperature=0.1, model="gpt-3.5-turbo")
-llm = Ollama(temperature=0.1, model="mistral:7b", request_timeout=300.0)
+llm = OpenAI(temperature=0.1, model="gpt-3.5-turbo")
+# llm = Ollama(temperature=0.1, model="mistral:7b", request_timeout=300.0)
 
 embed_model = HuggingFaceEmbedding(
     model_name="sentence-transformers/all-mpnet-base-v2", max_length=512

@@ -1,7 +1,7 @@
 import logging
 from .mongo_storage import *
 from llama_index.core.node_parser import SentenceSplitter, SentenceWindowNodeParser
-from llama_index.core import download_loader, load_index_from_storage
+from llama_index.core import download_loader, load_index_from_storage, ServiceContext, set_global_service_context
 from llama_index.core import VectorStoreIndex, SummaryIndex, KnowledgeGraphIndex
 from llama_index.core.tools import QueryEngineTool, ToolMetadata
 from llama_index.readers.confluence import ConfluenceReader
@@ -10,6 +10,11 @@ from llama_index.readers.file.pymu_pdf import PyMuPDFReader
 from .chat_context import get_gloabl_chat_agent_instance
 from app.models.types import *
 from typing import Union, Tuple
+from llama_index.llms.ollama import Ollama
+from llama_index.llms.openai import OpenAI
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.embeddings.ollama import OllamaEmbedding
+
 logger = logging.getLogger('root')
 
 # node_parser = SentenceSplitter(chunk_size=1024, chunk_overlap=20)
@@ -18,6 +23,24 @@ node_parser = SentenceWindowNodeParser.from_defaults(
     window_metadata_key="window",
     original_text_metadata_key="original_text",
 )
+
+# model = "mistral:7b"  # mistral llama2
+llm = OpenAI(temperature=0.1, model="gpt-3.5-turbo")
+
+# node_parser = SentenceSplitter(chunk_size=512)
+
+# llm = Ollama(temperature=0.1, model=model, request_timeout=3000.0)
+# embed_model = OllamaEmbedding(model_name=model)
+
+embed_model = HuggingFaceEmbedding(
+    model_name="sentence-transformers/all-mpnet-base-v2", max_length=512
+)
+
+service_context = ServiceContext.from_defaults(
+    llm=llm,
+    embed_model=embed_model
+)
+set_global_service_context(service_context)
 
 
 def configLoader(loaderName, config: ConfuluenceLoaderConfig = None):
@@ -223,15 +246,16 @@ def add_index(user_id, file_id):
         for n in nodes:
             ref_doc_ids.append(n.ref_doc_id)
             node_ids.append(n.node_id)
-        vectorStoreIndex.insert_nodes(nodes)
-        vetor_storage.persist()
-        summaryStoreIndex.insert_nodes(nodes)
-        summary_storage.persist()
+        # vectorStoreIndex.insert_nodes(nodes)
+        # vetor_storage.persist()
+        # summaryStoreIndex.insert_nodes(nodes)
+        # summary_storage.persist()
         knowledgeStoreIndex.build_index_from_nodes(nodes)
         knowledge_storage.persist()
-        file.indexed = True
         file.node_ids = node_ids
         file.ref_doc_ids = ref_doc_ids
+        file.save()
+        file.indexed = True
         file.save()
         get_gloabl_chat_agent_instance().refreshAgent(user_id)
         unlockFile(user_id, file_id)
