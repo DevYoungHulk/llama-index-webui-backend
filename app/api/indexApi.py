@@ -2,7 +2,7 @@ from flask import Blueprint, request
 import logging
 from app.services.index_mangement import *
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.celery_tasks.indexJob import *
+# from app.celery_tasks.indexJob import *
 index = Blueprint('index', __name__)
 logger = logging.getLogger('root')
 
@@ -14,9 +14,14 @@ def add_index_for_file(file_id):
     locked, msg = islockedFile(user_id, file_id)
     if locked:
         return {'msg': msg}
-    create_index_task.delay(user_id, file_id)
-    # task.delay('user_id', 1)
-    return {'msg': 'indexing'}
+    # create_index_task.delay(user_id, file_id)
+    # return {'msg': 'indexing'}
+    try:
+        return add_index(user_id, file_id)
+    except Exception as e:
+        unlockFile(user_id, file_id)
+        logger.error(e)
+        return {'msg': 'indexing failed'}, 500
 
 
 @index.route('/remove/<file_id>', methods=['DELETE'])

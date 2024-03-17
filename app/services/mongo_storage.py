@@ -52,13 +52,15 @@ def get_knowledge_storage(namespace) -> StorageContext:
     assert db_name is not None, 'no db name specified!'
     index_store = MongoIndexStore.from_uri(
         uri=uri, db_name=db_name, namespace=namespace+'.knowledge')
-
+    doc_store = MongoDocumentStore.from_uri(
+        uri=uri, db_name=db_name, namespace=namespace+'.knowledge_doc')
     neo_store = Neo4jGraphStore(
         url="bolt://127.0.0.1:7687", username="neo4j", password="password",
         node_label="Node"
     )
     storage_context = StorageContext.from_defaults(
         graph_store=neo_store,
+        docstore=doc_store,
         index_store=index_store
     )
     return storage_context
