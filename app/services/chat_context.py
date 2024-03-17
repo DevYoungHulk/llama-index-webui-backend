@@ -1,3 +1,5 @@
+from llama_index.core import Settings
+from mongoengine import QuerySet
 from llama_index.core import download_loader, set_global_service_context, ServiceContext, load_index_from_storage
 from llama_index.core.agent import ReActAgent
 from llama_index.core.types import ChatMessage
@@ -10,10 +12,8 @@ from llama_index.embeddings.ollama import OllamaEmbedding
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from app.models.types import ChatHistory, MessageRole
 from .mongo_storage import *
-import pymongo
 import logging
 logger = logging.getLogger('root')
-from mongoengine import QuerySet
 
 
 class GloablChatAgent:
@@ -21,19 +21,16 @@ class GloablChatAgent:
 
     # model = "mistral:7b"  # mistral llama2
     # llm = Ollama(temperature=0.1, model=model, request_timeout=3000.0)
-    llm = OpenAI(temperature=0.1, model="gpt-3.5-turbo")
+    # llm = OpenAI(temperature=0.1, model="gpt-3.5-turbo")
 
-    def __init__(self) -> None:
+    # def __init__(self) -> None:
         # node_parser = SentenceSplitter(chunk_size=512)
-        embed_model = HuggingFaceEmbedding(
-            model_name="sentence-transformers/all-mpnet-base-v2", max_length=512
-        )
         # embed_model = OllamaEmbedding(model_name=self.model)
-        service_context = ServiceContext.from_defaults(
-            llm=self.llm,
-            embed_model=embed_model
-        )
-        set_global_service_context(service_context)
+        # service_context = ServiceContext.from_defaults(
+        #     llm=Settings.llm,
+        #     embed_model=Settings.embed_model
+        # )
+        # set_global_service_context(service_context)
 
     def refreshAgent(self, user_id):
         return self.getAgent(user_id, True)
@@ -41,7 +38,8 @@ class GloablChatAgent:
     def getAgent(self, user_id, refresh=False):
         if user_id in self.global_agents and not refresh:
             return self.global_agents[user_id]
-        histories: QuerySet[ChatHistory] = ChatHistory.objects(user_id=user_id).order_by('date')
+        histories: QuerySet[ChatHistory] = ChatHistory.objects(
+            user_id=user_id).order_by('date')
         chat_history = []
         for h in histories:
             chat_history.append(h.toChatMessage())
@@ -51,7 +49,7 @@ class GloablChatAgent:
             logger.info(t.metadata.description)
         agent = ReActAgent.from_tools(
             tools,
-            llm=self.llm,
+            llm=Settings.llm,
             verbose=True,
             chat_history=chat_history,
             # callback_manager=callback_manager,
@@ -85,6 +83,9 @@ class GloablChatAgent:
                 documents=[], storage_context=vetor_storage, show_progress=True)
         try:
             knowledge_index = load_index_from_storage(knowledge_storage)
+            logger.info("---------knowledge_index--------")
+            logger.info("knowledge_index count"+str(len(knowledge_index.ref_doc_info.items())))
+            logger.info(knowledge_index.ref_doc_info.items())
         except Exception as e:
             logger.error('loadQueryEngineTool load knowledge_index error')
             logger.error(e)

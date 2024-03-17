@@ -8,8 +8,6 @@ def setup_custom_logger(name):
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
 
-    logging.basicConfig(level=logging.DEBUG, handlers=[handler])
+    logging.basicConfig(level=logging.INFO, handlers=[handler])
     logger = logging.getLogger(name)
-    # logger.setLevel(logging.DEBUG)
-    # logger.addHandler(handler)
     return logger

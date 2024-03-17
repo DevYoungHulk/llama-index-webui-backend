@@ -25,22 +25,22 @@ node_parser = SentenceWindowNodeParser.from_defaults(
 )
 
 # model = "mistral:7b"  # mistral llama2
-llm = OpenAI(temperature=0.1, model="gpt-3.5-turbo")
+# llm = OpenAI(temperature=0.1, model="gpt-3.5-turbo")
 
 # node_parser = SentenceSplitter(chunk_size=512)
 
 # llm = Ollama(temperature=0.1, model=model, request_timeout=3000.0)
 # embed_model = OllamaEmbedding(model_name=model)
 
-embed_model = HuggingFaceEmbedding(
-    model_name="sentence-transformers/all-mpnet-base-v2", max_length=512
-)
+# embed_model = HuggingFaceEmbedding(
+#     model_name="sentence-transformers/all-mpnet-base-v2", max_length=512
+# )
 
-service_context = ServiceContext.from_defaults(
-    llm=llm,
-    embed_model=embed_model
-)
-set_global_service_context(service_context)
+# service_context = ServiceContext.from_defaults(
+#     llm=llm,
+#     embed_model=embed_model
+# )
+# set_global_service_context(service_context)
 
 
 def configLoader(loaderName, config: ConfuluenceLoaderConfig = None):
