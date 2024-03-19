@@ -122,19 +122,19 @@ def loadNodes(file: BaseFile):
 
 
 def remove_index(user_id, file_id):
-    vetor_storage = get_vector_storage(user_id)
-    try:
-        vectorStoreIndex = load_index_from_storage(vetor_storage)
-    except Exception as e:
-        logger.error(e)
-        return {'msg': 'vector index not found'}
+    # vetor_storage = get_vector_storage(user_id)
+    # try:
+    #     vectorStoreIndex = load_index_from_storage(vetor_storage)
+    # except Exception as e:
+    #     logger.error(e)
+    #     return {'msg': 'vector index not found'}
 
-    summary_storage = get_summary_storage(user_id)
-    try:
-        summaryStoreIndex = load_index_from_storage(summary_storage)
-    except Exception as e:
-        logger.error(e)
-        return {'msg': 'summary index not found'}
+    # summary_storage = get_summary_storage(user_id)
+    # try:
+    #     summaryStoreIndex = load_index_from_storage(summary_storage)
+    # except Exception as e:
+    #     logger.error(e)
+    #     return {'msg': 'summary index not found'}
     knowledge_storage = get_knowledge_storage(user_id)
     try:
         knowledgeStoreIndex = load_index_from_storage(knowledge_storage)
@@ -154,11 +154,12 @@ def remove_index(user_id, file_id):
         # Can't use vectorStoreIndex.delete_nodes
         # NotImplementedError: Vector indices currently only support delete_ref_doc, which deletes nodes using the ref_doc_id of ingested documents.
         for doc_id in file.ref_doc_ids:
-            vectorStoreIndex.delete_ref_doc(doc_id, True)
-            summaryStoreIndex.delete_ref_doc(doc_id, True)
+            # vectorStoreIndex.delete_ref_doc(doc_id, True)
+            # summaryStoreIndex.delete_ref_doc(doc_id, True)
             knowledgeStoreIndex.delete_ref_doc(doc_id, True)
-        # vectorStoreIndex.delete(file['doc_id'])
-        vetor_storage.persist()
+        # vetor_storage.persist()
+        # summaryStoreIndex.persist()
+        knowledge_storage.persist()
         file.indexed = False
         file.node_ids = []
         file.ref_doc_ids = []
@@ -185,8 +186,6 @@ def unlockFile(user_id, file_id) -> Tuple[bool, str]:
         user_id=user_id, id=file_id).first()
     if not file:
         return False, 'file not exsit'
-    elif file.indexed:
-        return False, 'file already indexed'
     else:
         file.indexing = False
         file.save()
@@ -257,8 +256,8 @@ def add_index(user_id, file_id):
         file.save()
         file.indexed = True
         file.save()
-        get_gloabl_chat_agent_instance().refreshAgent(user_id)
         unlockFile(user_id, file_id)
+        get_gloabl_chat_agent_instance().refreshAgent(user_id)
         return {'msg': 'index success', 'data': file.to_dict()}
     else:
         unlockFile(user_id, file_id)
