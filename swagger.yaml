@@ -1,0 +1,633 @@
+openapi: 3.0.3
+info:
+  title: Swagger Petstore - OpenAPI 3.0
+  description: |-
+    This is a sample Pet Store Server based on the OpenAPI 3.0 specification.  
+
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: apiteam@swagger.io
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.11
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+  - url: https://localhost:5000/api
+tags:
+  - name: user
+    description: Everything about your Pets
+  - name: chat group
+    description: Access to Petstore orders
+  - name: chat
+    description: Access to Petstore orders
+  - name: file
+    description: Operations about user
+  - name: index
+    description: Operations about user
+paths:
+  /user/register:
+    post:
+      tags:
+        - user
+      security: []
+      requestBody:
+        description: user info
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInfo'
+      responses:
+        '200':
+          description: Successful 
+        '500':
+          description: error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMsg'
+  /user/login:
+    post:
+      tags:
+        - user
+      security: []
+      description: get jwt token
+      responses:
+        '200':
+          description: Successful 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtToken'
+        '401':
+          description: username or password wrong
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMsg'
+        '500':
+          description: error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMsg'
+  /user/refresh:
+    post:
+      tags:
+        - user
+      description: refresh jwt token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful 
+        '401':
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMsg'
+        '500':
+          description: error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMsg'
+  /chat/groups:
+    get:
+      tags:
+        - chat group
+      summary: list chat groups
+      description: list chat groups by user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Groups'          
+        '401':
+          description: Invalid token
+        '404':
+          description: Config not found
+        '405':
+          description: Validation exception
+  /chat/group:
+    post:
+      tags:
+        - chat group
+      summary: create chat group
+      description: create chat group
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: group info
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqGroup'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'          
+        '401':
+          description: Invalid token
+        '404':
+          description: Config not found
+        '405':
+          description: Validation exception
+  /chat/history/{groupId}:
+    get:
+      tags:
+        - chat
+      summary: query chat history
+      description: query chat history
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: UUID ID of the chat group
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatHistoryListData'          
+        '401':
+          description: Invalid token
+        '404':
+          description: Config not found
+        '405':
+          description: Validation exception
+  /chat/{groupId}:
+    post:
+      tags:
+        - chat
+      summary: send chat message
+      description: send chat message
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                msg:
+                  type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatHistoryData'          
+        '401':
+          description: Invalid token
+        '404':
+          description: Config not found
+        '405':
+          description: Validation exception          
+
+  /chat/group/{groupId}:
+    get:
+      tags:
+        - chat group
+      summary: query chat group
+      description: query chat group
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          schema:
+            type: string
+          required: true
+          description: UUID ID of the chat group
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'          
+        '401':
+          description: Invalid token
+        '404':
+          description: Config not found
+        '405':
+          description: Validation exception
+    delete:
+      tags:
+        - chat group
+      summary: delete chat group
+      description: delete chat group
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          schema:
+            type: string
+          required: true
+          description: UUID ID of the chat group
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'          
+        '401':
+          description: Invalid token
+        '404':
+          description: Config not found
+        '405':
+          description: Validation exception
+
+  /chat/config/{groupId}:
+    get:
+      tags:
+        - chat
+      summary: Create or update chat model config
+      description: Create or update chat model config by Id
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          schema:
+            type: string
+          required: true
+          description: UUID ID of the chat group
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatConfig'          
+        '401':
+          description: Invalid token
+        '404':
+          description: Config not found
+        '405':
+          description: Validation exception
+    post:
+      tags:
+        - chat
+      summary: Create or update chat model config
+      description: Create or update chat model config by Id
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          schema:
+            type: string
+          required: true
+          description: UUID ID of the chat group
+      requestBody:
+        description: return chat model config
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatModelConfig'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatModelConfig'          
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Config not found
+        '405':
+          description: Validation exception
+  /file/list/{groupId}:
+    get:
+      tags:
+        - file
+      summary: list file
+      description: list file by user
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          schema:
+            type: string
+            format: uuid
+          required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseFileListData'          
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Config not found
+        '405':
+          description: Validation exception
+        
+  /file/upload:
+    post:
+      tags:
+        - file
+      summary: upload file
+      description: upload file
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                groupId:
+                  type: string
+                fileName:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseFileData'          
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Config not found
+        '405':
+          description: Validation exception     
+  /index/{groupId}/{fileId}:
+    post:
+      tags:
+        - index
+      summary: index file
+      description: index file
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          schema:
+            type: string
+            format: uuid
+          required: true
+        - in: path
+          name: fileId
+          schema:
+            type: string
+            format: uuid
+          required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseData'          
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Config not found
+        '405':
+          description: Validation exception
+components:
+  schemas:
+    BaseData:
+      type: object
+      properties:
+        msg:
+          type: string
+          example: "system msg"
+    ErrorMsg:
+      allOf:
+        - $ref: '#/components/schemas/BaseData'
+    JwtToken:
+      allOf:
+        - $ref: '#/components/schemas/BaseData'
+        - type: object
+          properties:
+            token:
+              type: string
+            refresh_token:
+              type: string
+    UserInfo:
+      type: object
+      properties:
+        username:
+          type: string
+          example: "user1"
+        password:
+          type: string
+          example: "123456"
+    ReqGroup:
+      type: object
+      properties:
+        data: 
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            group_name:
+              type: string
+              example: "group name 1"
+    Group:
+      allOf:
+        - $ref: '#/components/schemas/BaseData'
+        - type: object
+          properties:
+            data:
+              type: object
+              $ref: '#/components/schemas/ReqGroup'
+    Groups:
+      allOf:
+        - $ref: '#/components/schemas/BaseData'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ReqGroup'
+    ChatModelConfig:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        model_type:
+          type: string
+          example: "openai"
+          enum:
+            - openai
+            - huggingface
+            - ollama
+        model_name:
+          type: string
+          example: "gpt-3.5-turbo" 
+        openai_api_key:
+          type: string
+          example: "sk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" 
+    IndexConfig:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        storage_type:
+          type: string
+          example: "local"
+          enum:
+            - local
+            - mongo
+            - neo4j
+        config_type:
+          type: string
+          example: "vector"
+          enum:
+            - vector
+            - knowlege_graph
+            - summary
+            - keyword
+    ChatConfig:
+      allOf:
+        - $ref: '#/components/schemas/BaseData'
+        - type: object
+          properties:
+            data: 
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                group_id:
+                  type: string
+                  format: uuid
+                  example: "user1"
+                chat_model: 
+                  $ref: '#/components/schemas/ChatModelConfig'
+                embedded_model: 
+                  $ref: '#/components/schemas/ChatModelConfig'
+                index_store_configs:
+                  $ref: '#/components/schemas/IndexConfig'
+                store_configs:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/IndexConfig'
+                retriever:
+                  $ref: '#/components/schemas/IndexConfig'
+                system_prompt:
+                  type: string
+                  example: |-
+                    You are an in-house consultant.
+                    You can help users answer questions they encounter while developing software.
+                    To answer a question you need to query against the standardized documentation in query engines and then answer the user.
+                    Don't answer if you can't find index from query engines. "
+    
+    BaseFile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        group_id:
+          type: string
+          format: uuid
+        indexed:
+          type: boolean
+          example: false
+        indexing:
+          type: boolean
+          example: false
+        node_ids:
+          type: array
+          items:
+            type: string
+            example: "node_id_1"
+        ref_doc_ids:
+          type: array
+          items:
+            type: string
+            example: "ref_doc_id_1"
+    BaseFileData:
+      allOf:
+        - $ref: '#/components/schemas/BaseData'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/BaseFile'
+    BaseFileListData:
+      allOf:
+        - $ref: '#/components/schemas/BaseData'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/BaseFile'
+    ChatHistory:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        groupId:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum:
+            - user
+            - assistant
+        content:
+          type: string
+          example: "hello"
+        date:
+          type: string
+          example: "2023-05-01T00:00:00Z"
+    ChatHistoryData:
+      allOf:
+        - $ref: '#/components/schemas/BaseData'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/ChatHistory'
+    ChatHistoryListData:
+      allOf:
+        - $ref: '#/components/schemas/BaseData'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ChatHistory'
+  securitySchemes:
+    bearerAuth:            # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: [] 
