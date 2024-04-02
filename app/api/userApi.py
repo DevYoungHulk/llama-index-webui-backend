@@ -36,8 +36,8 @@ def login():
         login_user(user)
         access_token = create_access_token(identity=user.id)
         refresh_token = create_refresh_token(identity=user.id)
-        return {'message': 'Login successful', 'token': access_token, 'refresh_token': refresh_token}, 200
-    return {'message': 'Invalid username or password'}, 401
+        return {'msg': 'Login successful', 'token': access_token, 'refresh_token': refresh_token}, 200
+    return {'msg': 'Invalid username or password'}, 401
 
 
 @user.route('/refresh', methods=['POST'])
@@ -48,12 +48,12 @@ def refresh():
     if current_user:
         access_token = create_access_token(identity=current_user)
         refresh_token = create_refresh_token(identity=current_user)
-        return {'message': 'Login successful', 'token': access_token, 'refresh_token': refresh_token}, 200
-    return {'message': 'Invalid token'}, 401
+        return {'msg': 'Login successful', 'token': access_token, 'refresh_token': refresh_token}, 200
+    return {'msg': 'Invalid token'}, 401
 
 
 @user.route('/logout')
 @jwt_required
 def logout():
     logout_user()
-    return {'message': 'Logout successful'}, 200
+    return {'msg': 'Logout successful'}, 200

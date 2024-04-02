@@ -9,7 +9,7 @@ class Config:
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
     SEND_FILE_MAX_AGE_DEFAULT = 300
     timeout = 300
-
+    CORS_HEADERS = 'Content-Type'
     # 数据库规则
     # SQLALCHEMY_TRACK_MODIFICATIONS = False
     # SQLALCHEMY_COMMIT_ON_TEARDOWN = True

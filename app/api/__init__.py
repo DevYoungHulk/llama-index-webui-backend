@@ -1,5 +1,5 @@
 from .indexApi import index
-from .fileApi import file
+from .docApi import doc
 from .chatApi import chat
 from .userApi import user
 import logging
@@ -7,7 +7,7 @@ logger = logging.getLogger('root')
 
 DEFAULT_BLUEPRINT = [
     (index, '/api/index'),
-    (file, '/api/file'),
+    (doc, '/api/doc'),
     (chat, '/api/chat'),
     (user, '/api/user')
 ]

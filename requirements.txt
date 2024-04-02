@@ -1,4 +1,4 @@
-llama-index==0.10.19
+llama-index==0.10.20
 llama-index-storage-docstore-mongodb==0.1.1
 llama-index-storage-index-store-mongodb==0.1.1
 llama-index-vector-stores-mongodb==0.1.3
@@ -6,6 +6,9 @@ motor==3.3.2
 llama-index-graph-stores-neo4j==0.1.2
 llama-index-embeddings-ollama==0.1.2
 llama-index-embeddings-huggingface==0.1.4
+llama-index-llms-huggingface 
+# T5Tokenizer requires the SentencePiece library but it was not found in your environment. Checkout the instructions on the
+sentencepiece==0.2.0
 
 llama-index-readers-file
 llama-index-readers-confluence
@@ -14,6 +17,7 @@ llama-index-readers-smart-pdf-loader
 cryptography==42.0.5
 
 Flask==3.0.2
+flask-cors
 # Flask-SQLAlchemy==3.1.1
 pymongo[srv]
 mongoengine==0.27.0
