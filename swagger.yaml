@@ -104,7 +104,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMsg'
-  /chat/groups:
+  /groups:
     get:
       tags:
         - chat group
@@ -125,7 +125,7 @@ paths:
           description: Config not found
         '405':
           description: Validation exception
-  /chat/group:
+  /group:
     post:
       tags:
         - chat group
@@ -139,6 +139,61 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ReqGroup'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'          
+        '401':
+          description: Invalid token
+        '404':
+          description: Config not found
+        '405':
+          description: Validation exception
+  /group/{groupId}:
+    get:
+      tags:
+        - chat group
+      summary: query chat group
+      description: query chat group
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          schema:
+            type: string
+          required: true
+          description: UUID ID of the chat group
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'          
+        '401':
+          description: Invalid token
+        '404':
+          description: Config not found
+        '405':
+          description: Validation exception
+    delete:
+      tags:
+        - chat group
+      summary: delete chat group
+      description: delete chat group
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          schema:
+            type: string
+          required: true
+          description: UUID ID of the chat group
       responses:
         '200':
           description: Successful operation
@@ -284,61 +339,7 @@ paths:
         '405':
           description: Validation exception          
 
-  /chat/group/{groupId}:
-    get:
-      tags:
-        - chat group
-      summary: query chat group
-      description: query chat group
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: groupId
-          schema:
-            type: string
-          required: true
-          description: UUID ID of the chat group
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Group'          
-        '401':
-          description: Invalid token
-        '404':
-          description: Config not found
-        '405':
-          description: Validation exception
-    delete:
-      tags:
-        - chat group
-      summary: delete chat group
-      description: delete chat group
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: groupId
-          schema:
-            type: string
-          required: true
-          description: UUID ID of the chat group
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Group'          
-        '401':
-          description: Invalid token
-        '404':
-          description: Config not found
-        '405':
-          description: Validation exception
+  
 
   /chat/config/{groupId}:
     get:
@@ -401,7 +402,7 @@ paths:
           description: Config not found
         '405':
           description: Validation exception
-  /doc/{groupId}/{fileType}/list:
+  /docs/{groupId}/{fileType}:
     get:
       tags:
         - document
@@ -441,7 +442,7 @@ paths:
         '405':
           description: Validation exception
         
-  /doc/{groupId}/{fileType}/add:
+  /doc/{groupId}/{fileType}:
     post:
       tags:
         - document
@@ -573,15 +574,18 @@ components:
     ReqGroup:
       type: object
       properties:
-        data: 
-          type: object
-          properties:
-            id:
-              type: string
-              format: uuid
-            group_name:
-              type: string
-              example: "group name 1"
+        group_name:
+          type: string
+          example: "group name 1"
+    ResGroup:
+      type: object
+      properties:
+        group_name:
+          type: string
+          example: "group name 1"
+        id:
+          type: string
+          format: uuid
     Group:
       allOf:
         - $ref: '#/components/schemas/BaseData'
@@ -589,7 +593,7 @@ components:
           properties:
             data:
               type: object
-              $ref: '#/components/schemas/ReqGroup'
+              $ref: '#/components/schemas/ResGroup'
     Groups:
       allOf:
         - $ref: '#/components/schemas/BaseData'
