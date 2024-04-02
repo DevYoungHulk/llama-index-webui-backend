@@ -172,6 +172,71 @@ paths:
           description: Config not found
         '405':
           description: Validation exception
+  /chat/history/{groupId}/clear:
+    post:
+      tags:
+        - chat
+      summary: clear chat history
+      description: clear chat history
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: UUID ID of the chat group
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseData'          
+        '401':
+          description: Invalid token
+        '404':
+          description: Config not found
+        '405':
+          description: Validation exception
+  /chat/{groupId}/{msgId}:
+    delete:
+      tags:
+        - chat
+      summary: clear chat history
+      description: clear chat history
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: UUID ID of the chat group
+        - in: path
+          name: msgId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: UUID ID of the chat msg
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseData'          
+        '401':
+          description: Invalid token
+        '404':
+          description: Config not found
+        '405':
+          description: Validation exception
   /chat/{groupId}:
     post:
       tags:
@@ -180,6 +245,14 @@ paths:
       description: send chat message
       security:
         - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: UUID ID of the chat group
       requestBody:
         content:
           multipart/form-data:
