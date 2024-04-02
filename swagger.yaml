@@ -18,15 +18,15 @@ servers:
   - url: https://localhost:5000/api
 tags:
   - name: user
-    description: Everything about your Pets
+    description: user login & register
   - name: chat group
-    description: Access to Petstore orders
+    description: chat groups
   - name: chat
-    description: Access to Petstore orders
-  - name: file
-    description: Operations about user
+    description: chat history & chat configuration in group
+  - name: document
+    description: User private documents management
   - name: index
-    description: Operations about user
+    description: User private documents index management
 paths:
   /user/register:
     post:
@@ -392,10 +392,10 @@ paths:
           description: Config not found
         '405':
           description: Validation exception
-  /file/list/{groupId}:
+  /doc/{groupId}/{fileType}/list:
     get:
       tags:
-        - file
+        - document
       summary: list file
       description: list file by user
       security:
@@ -406,6 +406,17 @@ paths:
           schema:
             type: string
             format: uuid
+          required: true
+        - in: path
+          name: fileType
+          schema:
+            type: string
+            enum:
+              - all
+              - pdf
+              - md
+              - txt
+              - confluence
           required: true
       responses:
         '200':
@@ -421,25 +432,59 @@ paths:
         '405':
           description: Validation exception
         
-  /file/upload:
+  /doc/{groupId}/{fileType}/add:
     post:
       tags:
-        - file
+        - document
       summary: upload file
       description: upload file
       security:
         - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          schema:
+            type: string
+            format: uuid
+          required: true
+        - in: path
+          name: fileType
+          schema:
+            type: string
+            enum:
+              - all
+              - pdf
+              - md
+              - txt
+              - confluence
+          required: true
       requestBody:
         content:
           multipart/form-data:
             schema:
               type: object
               properties:
-                groupId:
+                name:
                   type: string
-                fileName:
+                file:
                   type: string
                   format: binary
+                  description: only type pdf/md/txt use it
+                confluenceSpace:
+                  type: string
+                  description: only type confluence use it
+                confluencePageIds:
+                  type: string
+                  description: only type confluence use it
+                confluenceUrl:
+                  type: string
+                  description: only type confluence use it
+                include_children:
+                  type: boolean
+                  description: only type confluence use it
+                include_attachments:
+                  type: boolean
+                  description: only type confluence use it
       responses:
         '200':
           description: Successful operation
