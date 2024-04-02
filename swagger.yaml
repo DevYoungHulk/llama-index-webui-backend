@@ -125,7 +125,7 @@ paths:
           description: Config not found
         '405':
           description: Validation exception
-  /group:
+  /group/create:
     post:
       tags:
         - chat group
