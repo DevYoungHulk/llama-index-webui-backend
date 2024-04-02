@@ -352,7 +352,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ChatConfig'          
+                $ref: '#/components/schemas/ChatConfigData'          
         '401':
           description: Invalid token
         '404':
@@ -378,14 +378,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ChatModelConfig'
+              $ref: '#/components/schemas/ChatConfigReq'
       responses:
         '200':
           description: Successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ChatModelConfig'          
+                $ref: '#/components/schemas/ChatConfigData'          
         '400':
           description: Invalid ID supplied
         '404':
@@ -585,40 +585,62 @@ components:
             - knowlege_graph
             - summary
             - keyword
+    ChatConfigReq:
+      type: object
+      properties:
+        chat_model: 
+          $ref: '#/components/schemas/ChatModelConfig'
+        embedded_model: 
+          $ref: '#/components/schemas/ChatModelConfig'
+        index_store_configs:
+          $ref: '#/components/schemas/IndexConfig'
+        store_configs:
+          type: array
+          items:
+            $ref: '#/components/schemas/IndexConfig'
+        system_prompt:
+          type: string
+          example: |-
+            You are an in-house consultant.
+            You can help users answer questions they encounter while developing software.
+            To answer a question you need to query against the standardized documentation in query engines and then answer the user.
+            Don't answer if you can't find index from query engines. "
     ChatConfig:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        group_id:
+          type: string
+          format: uuid
+          example: "user1"
+        chat_model: 
+          $ref: '#/components/schemas/ChatModelConfig'
+        embedded_model: 
+          $ref: '#/components/schemas/ChatModelConfig'
+        index_store_configs:
+          $ref: '#/components/schemas/IndexConfig'
+        store_configs:
+          type: array
+          items:
+            $ref: '#/components/schemas/IndexConfig'
+
+        system_prompt:
+          type: string
+          example: |-
+            You are an in-house consultant.
+            You can help users answer questions they encounter while developing software.
+            To answer a question you need to query against the standardized documentation in query engines and then answer the user.
+            Don't answer if you can't find index from query engines. "
+    ChatConfigData:
       allOf:
         - $ref: '#/components/schemas/BaseData'
         - type: object
           properties:
             data: 
-              type: object
-              properties:
-                id:
-                  type: string
-                  format: uuid
-                group_id:
-                  type: string
-                  format: uuid
-                  example: "user1"
-                chat_model: 
-                  $ref: '#/components/schemas/ChatModelConfig'
-                embedded_model: 
-                  $ref: '#/components/schemas/ChatModelConfig'
-                index_store_configs:
-                  $ref: '#/components/schemas/IndexConfig'
-                store_configs:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/IndexConfig'
-                retriever:
-                  $ref: '#/components/schemas/IndexConfig'
-                system_prompt:
-                  type: string
-                  example: |-
-                    You are an in-house consultant.
-                    You can help users answer questions they encounter while developing software.
-                    To answer a question you need to query against the standardized documentation in query engines and then answer the user.
-                    Don't answer if you can't find index from query engines. "
+              $ref: '#/components/schemas/ChatConfig'
+              
     
     BaseFile:
       type: object
