@@ -1,11 +1,14 @@
 from app import create_app
 import traceback
 from flask import jsonify
+from flask_cors import CORS
+
 import logging
 # 默认为开发环境，按需求修改
 config_name = 'development'
 
 app = create_app(config_name)
+cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 logger = logging.getLogger('root')
 
