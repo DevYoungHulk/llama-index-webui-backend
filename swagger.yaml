@@ -207,7 +207,7 @@ paths:
           description: Config not found
         '405':
           description: Validation exception
-  /chat/history/{groupId}:
+  /chat/{groupId}:
     get:
       tags:
         - chat
@@ -236,7 +236,43 @@ paths:
           description: Config not found
         '405':
           description: Validation exception
-  /chat/history/{groupId}/clear:
+    post:
+      tags:
+        - chat
+      summary: send chat message
+      description: send chat message
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: UUID ID of the chat group
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                question:
+                  type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatHistoryData'          
+        '401':
+          description: Invalid token
+        '404':
+          description: Config not found
+        '405':
+          description: Validation exception       
+  /chat/{groupId}/clear:
     post:
       tags:
         - chat
@@ -301,47 +337,8 @@ paths:
           description: Config not found
         '405':
           description: Validation exception
-  /chat/{groupId}:
-    post:
-      tags:
-        - chat
-      summary: send chat message
-      description: send chat message
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: groupId
-          schema:
-            type: string
-            format: uuid
-          required: true
-          description: UUID ID of the chat group
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                msg:
-                  type: string
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ChatHistoryData'          
-        '401':
-          description: Invalid token
-        '404':
-          description: Config not found
-        '405':
-          description: Validation exception          
 
-  
-
-  /chat/config/{groupId}:
+  /chat/{groupId}/config:
     get:
       tags:
         - chat
@@ -396,6 +393,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ChatConfigData'          
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Config not found
+        '405':
+          description: Validation exception
+    delete:
+      tags:
+        - chat
+      summary: Create or update chat model config
+      description: Create or update chat model config by Id
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          schema:
+            type: string
+          required: true
+          description: UUID ID of the chat group
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseData'          
         '400':
           description: Invalid ID supplied
         '404':
@@ -570,7 +594,7 @@ components:
           example: "user1"
         password:
           type: string
-          example: "123456"
+          example: "12345"
     ReqGroup:
       type: object
       properties:
