@@ -37,10 +37,10 @@ services:
     env_file:
       - .env.neo4j
   webui:
-    image: llama-index-webui-backend-webui:latest
-    # build: 
-    #   context: .
-    #   network: host
+    # image: llama-index-webui-backend-webui:latest
+    build: 
+      context: .
+      network: host
     ports:
       - 5000:5000
     environment:
