@@ -426,7 +426,7 @@ paths:
           description: Config not found
         '405':
           description: Validation exception
-  /docs/{groupId}/{fileType}:
+  /doc/{groupId}/{fileType}:
     get:
       tags:
         - document
@@ -466,7 +466,6 @@ paths:
         '405':
           description: Validation exception
         
-  /doc/{groupId}/{fileType}:
     post:
       tags:
         - document
@@ -486,10 +485,7 @@ paths:
           schema:
             type: string
             enum:
-              - all
-              - pdf
-              - md
-              - txt
+              - normal
               - confluence
           required: true
       requestBody:
@@ -498,12 +494,14 @@ paths:
             schema:
               type: object
               properties:
-                name:
-                  type: string
                 file:
                   type: string
                   format: binary
-                  description: only type pdf/md/txt use it
+                  description: only type normal use it
+          application/json:
+            schema:
+              type: object
+              properties:
                 confluenceSpace:
                   type: string
                   description: only type confluence use it
