@@ -8,6 +8,10 @@ from .log import setup_custom_logger
 from mongoengine import connect
 from werkzeug.exceptions import NotFound
 from celery import Celery
+from flask import request, g, jsonify
+from flask_cors import CORS
+import uuid
+import traceback
 
 logger = setup_custom_logger('root')
 logger.info('logger inited')
@@ -51,4 +55,29 @@ def create_app(config_name):
         logger.error("加载蓝图或扩展失败，确保它们已正确定义")
         raise
 
+    cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+    @app.before_request
+    def log_request_info():
+        g.request_id = str(uuid.uuid4())
+        logger.debug('(%s) Request Headers: %s', g.request_id, request.headers)
+        logger.info('(%s) Request Body: %s', g.request_id, request.get_data())
+
+    @app.after_request
+    def log_response_info(response):
+        logger.debug('(%s) Response Headers: %s',
+                     g.request_id, response.headers)
+        logger.info('(%s) Response Body: %s',
+                    g.request_id, response.get_data())
+        return response
+
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        traceback_text = traceback.format_exc()
+        error_message = {'msg': str(e)}
+        logger.error(error_message)
+        logger.error(traceback_text)
+        response = jsonify(error_message)
+        response.status_code = 500 if isinstance(e, Exception) else 400
+        return response
     return app
