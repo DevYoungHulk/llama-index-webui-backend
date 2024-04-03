@@ -12,20 +12,20 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
-def list_all(user_id, type):
+def list_all(user_id, group_id, type):
     result = []
     if type == FileType.FILE.value or type == FileType.ALL.value:
-        list_cur = NormalFile.objects(user_id=user_id)
+        list_cur = NormalFile.objects(user_id=user_id, group_id=group_id)
         for i in list_cur:
             result.append(i.to_dict())
     if type == FileType.CONFLUENCE.value or type == FileType.ALL.value:
-        list_cur = Confuluence.objects(user_id=user_id)
+        list_cur = Confuluence.objects(user_id=user_id, group_id=group_id)
         for i in list_cur:
             result.append(i.to_dict())
     return {'data': result}
 
 
-def delete(user_id, file_id):
+def delete(user_id, group_id, file_id):
     file: None | BaseFile = BaseFile.objects(
         user_id=user_id, id=file_id).first()
     if file:
@@ -38,11 +38,11 @@ def delete(user_id, file_id):
         return {'msg': 'delete failed, file not esist!'}, 404
 
 
-def add(user_id, type, file):
+def add(user_id, group_id, type, file):
     if type == FileType.FILE.value:
         if file and allowed_file(file.filename):
             file_name = file.filename
-            f = NormalFile(user_id=user_id, root_path='./temp',
+            f = NormalFile(user_id=user_id, group_id=group_id, root_path='./temp',
                            file_name=file_name)
             if not os.path.exists(f.temp_path):
                 os.makedirs(f.temp_path)
@@ -51,10 +51,10 @@ def add(user_id, type, file):
                 md5 = hashlib.md5(file_to_check.read()).hexdigest()
                 f.md5 = md5
 
-            if NormalFile.objects(user_id=user_id, md5=md5).first():
+            if NormalFile.objects(user_id=user_id, group_id=group_id, md5=md5).first():
                 os.remove(f.temp_full_path)
                 return {'msg': 'file exsit'}
-            elif NormalFile.objects(user_id=user_id, file_name=file_name).first():
+            elif NormalFile.objects(user_id=user_id, group_id=group_id, file_name=file_name).first():
                 os.remove(f.temp_full_path)
                 return {'msg': 'file name duplicate'}
             if not os.path.exists(f.file_path):
@@ -68,11 +68,11 @@ def add(user_id, type, file):
         else:
             confuluence = Confuluence(
                 user_id=user_id,
-                space=file['space'] if 'space' in file  else None,
-                page_id=file['page_id'] if 'page_id' in file  else None,
-                group_key=file['group_key'] if 'group_key' in file  else None,
-                include_children=file['include_children'] if 'include_children' in file  else False,
-                include_attachments=file['include_attachments'] if 'include_attachments' in file  else False,
+                space=file['space'] if 'space' in file else None,
+                page_id=file['page_id'] if 'page_id' in file else None,
+                group_key=file['group_key'] if 'group_key' in file else None,
+                include_children=file['include_children'] if 'include_children' in file else False,
+                include_attachments=file['include_attachments'] if 'include_attachments' in file else False,
             )
             confuluence.save()
 
