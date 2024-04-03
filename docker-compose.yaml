@@ -36,6 +36,20 @@ services:
       - neo4j-plugins:/var/lib/neo4j/plugins/
     env_file:
       - .env.neo4j
+  webui:
+    build: 
+      context: .
+      network: host
+    ports:
+      - 5000:5000
+    environment:
+      - ENV_NAME='testing'
+      - MONGO_DB_NAME='llama-index-dev'
+      - MONGO_USERNAME='root'
+      - MONGO_PASSWORD='example'
+      - MONGO_HOST='mongo:27017'
+      - SECRET_KEY='a8ef2798c4e84a0744da509c5da07e30'
+      - JWT_SECRET_KEY='ydYdTpdGaF5KnPcPa_UeARTgEIzzpXjemQ8rnZ9ZhFA'
   # worker:
   #   build: ./
   #   entrypoint: celery
