@@ -1,4 +1,5 @@
 
+from llama_index.core.agent import ReActAgent
 from datetime import datetime
 from llama_index.core.types import MessageRole
 from app.models.types import *
@@ -6,54 +7,92 @@ from flask import Blueprint, request
 import logging
 from app.services.chat_context import get_gloabl_chat_agent_instance
 from flask_jwt_extended import jwt_required, get_jwt_identity
-
+import traceback
 chat = Blueprint('chat', __name__)
 logger = logging.getLogger('root')
 
 
-@chat.route('/', methods=['POST'])
+@chat.route('/<group_id>', methods=['POST'])
 @jwt_required()
-def chat_():
-    user_id = get_jwt_identity()
-    if not user_id:
-        raise ValueError("User ID is required.")
+def chat_(group_id):
     question = request.json['question']
     date_q = datetime.now(
         pytz.timezone('Asia/Shanghai')).isoformat()
     chat_q = ChatHistory(
-        user_id=user_id, role=MessageRole.USER, content=question, date=date_q)
+        group_id=group_id, role=MessageRole.USER, content=question, date=date_q)
     chat_q.save()
-    try:
-        answer = str(get_gloabl_chat_agent_instance().getAgent(
-            user_id).chat(question))
-    except Exception as e:
-        return {'msg': str(e)}, 500
+    # try:
+    #     agent: ReActAgent = get_gloabl_chat_agent_instance().getAgent(
+    #         user_id)
+    #     answer = str(agent.query(question))
+
+    #     # answer = str(get_gloabl_chat_agent_instance().loadQueryEngineTool(user_id)[0].query_engine.query(question))
+    # except Exception as e:
+    #     logger.error(traceback.format_exc())
+    #     return {'msg': str(e)}, 500
     date_a = datetime.now(
         pytz.timezone('Asia/Shanghai')).isoformat()
+    answer = 'test answer ' + date_a
+
     chat_a = ChatHistory(
-        user_id=user_id, role=MessageRole.ASSISTANT, content=answer, date=date_a)
+        group_id=group_id, role=MessageRole.ASSISTANT, content=answer, date=date_a)
     chat_a.save()
     return {'msg': 'success', 'data': answer}, 200
 
 
-@chat.route('/history', methods=['GET'])
+@chat.route('/<group_id>', methods=['GET'])
 @jwt_required()
-def get_history():
-    user_id = get_jwt_identity()
-    res = ChatHistory.objects(user_id=user_id)
+def get_history(group_id):
+    res = ChatHistory.objects(group_id=group_id,)
     result = []
     for i in res:
         result.append(i.to_dict())
     return {'msg': 'success', 'data': result}, 200
 
 
-@chat.route('/clear', methods=['POST'])
+@chat.route('/<group_id>/clear', methods=['POST'])
 @jwt_required()
-def clear_history():
-    user_id = get_jwt_identity()
-    res = ChatHistory.objects(user_id=user_id).delete()
+def clear_history(group_id):
+    res = ChatHistory.objects(group_id=group_id).delete()
     logger.info(res)
-    agents = get_gloabl_chat_agent_instance().global_agents
-    if user_id in agents:
-        del agents[user_id]
+    return {'msg': 'success'}
+
+
+@chat.route('/<group_id>/<msg_id>', methods=['DELETE'])
+@jwt_required()
+def del_chat_msg(group_id, msg_id):
+    res = ChatHistory.objects(
+        group_id=group_id,  id=msg_id).delete()
+    logger.info(res)
+    return {'msg': 'success'}
+
+
+@chat.route('/<group_id>/config', methods=['POST'])
+def create_or_update_config(group_id):
+    new_config: ChatConfig = ChatConfig.from_json(json.dumps(request.json))
+    logger.info('new config ->' + new_config.to_json())
+    current_config = ChatConfig.objects(group_id=group_id).first()
+    if current_config:
+        for attr in current_config:
+            if attr in ['id', 'group_id'] or None == getattr(new_config, attr) or len(getattr(new_config, attr)) == 0:
+                continue
+            logger.info(attr)
+            current_config.update(**{'set__'+attr: getattr(new_config, attr)})
+    else:
+        new_config.group_id = group_id
+        new_config.save()
+    return {'msg': 'success', 'data': {'id': new_config.id}}
+
+
+@chat.route('/<group_id>/config', methods=['GET'])
+def get_config(group_id):
+    res = ChatConfig.objects(group_id=group_id).first()
+    logger.info(res)
+    return {'msg': 'success', 'data': res.to_dict()}
+
+
+@chat.route('/<group_id>/config', methods=['DELETE'])
+def delete_config(group_id):
+    res = ChatConfig.objects(group_id=group_id).delete()
+    logger.info(res)
     return {'msg': 'success'}
