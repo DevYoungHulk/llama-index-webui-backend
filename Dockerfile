@@ -21,7 +21,7 @@ COPY ./ ./
 ENV PYTHONUNBUFFERED=1 PYTHONHASHSEED=random PYTHONDONTWRITEBYTECODE=1
 
 # Install the required packages
-RUN python3 -m pip install -r requirements.txt 
+RUN python3 -m pip install -r requirements.txt --no-cache-dir
 
 # PYTHONUNBUFFERED: Force stdin, stdout and stderr to be totally unbuffered. (equivalent to `python -u`)
 # PYTHONHASHSEED: Enable hash randomization (equivalent to `python -R`)
