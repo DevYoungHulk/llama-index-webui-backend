@@ -28,7 +28,8 @@ def create_group():
     group = ChatGroup.objects(user_id=user_id, group_name=group_name).first()
     if group:
         return {'msg': 'group already exists'}, 405
-    group = ChatGroup(user_id=user_id, group_name=group_name).save()
+    group = ChatGroup(user_id=user_id, group_name=group_name)
+    group.save()
     return {'msg': 'ok', 'data': group.to_dict()}
 
 
@@ -37,7 +38,7 @@ def create_group():
 def get_group(group_id):
     user_id = get_jwt_identity()
     group = ChatGroup.objects(user_id=user_id, id=group_id).first()
-    return {'msg': 'ok', 'data': group.to_dict()}
+    return {'msg': 'ok', 'data': group.to_dict()} if group else {'msg': 'group not found'}, 404
 
 
 @chat_group.route('/<group_id>', methods=['DELETE'])
@@ -46,4 +47,4 @@ def delete_group(group_id):
     user_id = get_jwt_identity()
     res = ChatGroup.objects(user_id=user_id, id=group_id).first().delete()
     logger.info(res)
-    return {'msg': 'ok'}
+    return {'msg': 'ok'} 

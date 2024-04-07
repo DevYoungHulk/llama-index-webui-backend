@@ -22,7 +22,7 @@ class DevelopmentConfig(Config):
     MONGO_USERNAME = 'root'
     MONGO_PASSWORD = 'example'
     MONGO_HOST = '127.0.0.1:27017'
-    MONGO_URI = 'mongodb://%s:%s@%s/%s?authSource=admin' % (
+    MONGO_URI = 'mongodb://%s:%s@%s/%s?authSource=admin&directConnection=true' % (
         MONGO_USERNAME, MONGO_PASSWORD, MONGO_HOST, MONGO_DB_NAME)
 
     SECRET_KEY = 'a8ef2798c4e84a0744da509c5da07e30'
@@ -30,7 +30,7 @@ class DevelopmentConfig(Config):
     JWT_ACCESS_TOKEN_EXPIRES = 43200  # Expires in 12 hour
     JWT_REFRESH_TOKEN_EXPIRES = 2592000  # 30 days
 
-    CELERY_BROKER_URL = 'mongodb://%s:%s@%s/%s?authSource=admin' % (
+    CELERY_BROKER_URL = 'mongodb://%s:%s@%s/%s?authSource=admin&directConnection=true' % (
         MONGO_USERNAME, MONGO_PASSWORD, MONGO_HOST, 'celery')
     CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 
@@ -41,7 +41,7 @@ class TestingConfig(Config):
     MONGO_USERNAME = os.environ.get('MONGO_USERNAME')
     MONGO_PASSWORD = os.environ.get('MONGO_PASSWORD')
     MONGO_HOST = os.environ.get('MONGO_HOST')
-    MONGO_URI = 'mongodb://%s:%s@%s/%s?authSource=admin' % (
+    MONGO_URI = 'mongodb://%s:%s@%s/%s?authSource=admin&directConnection=true' % (
         MONGO_USERNAME, MONGO_PASSWORD, MONGO_HOST, MONGO_DB_NAME)
 
     SECRET_KEY = os.environ.get('SECRET_KEY')
@@ -58,7 +58,7 @@ class ProductionConfig(Config):
     MONGO_USERNAME = os.environ.get('MONGO_USERNAME')
     MONGO_PASSWORD = os.environ.get('MONGO_PASSWORD')
     MONGO_HOST = os.environ.get('MONGO_HOST')
-    MONGO_URI = 'mongodb://%s:%s@%s/%s?authSource=admin' % (
+    MONGO_URI = 'mongodb://%s:%s@%s/%s?authSource=admin&directConnection=true' % (
         MONGO_USERNAME, MONGO_PASSWORD, MONGO_HOST, MONGO_DB_NAME)
 
     SECRET_KEY = os.environ.get('SECRET_KEY')
