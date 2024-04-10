@@ -27,7 +27,7 @@ def create_group():
     group_name = request.json.get('group_name')
     group = ChatGroup.objects(user_id=user_id, group_name=group_name).first()
     if group:
-        return {'msg': 'group already exists'}, 405
+        return {'msg': 'group already exists'}, 409
     group = ChatGroup(user_id=user_id, group_name=group_name)
     group.save()
     return {'msg': 'ok', 'data': group.to_dict()}
@@ -48,3 +48,34 @@ def delete_group(group_id):
     res = ChatGroup.objects(user_id=user_id, id=group_id).first().delete()
     logger.info(res)
     return {'msg': 'ok'} 
+
+
+@chat_group.route('/<group_id>/config', methods=['POST'])
+def create_or_update_config(group_id):
+    new_config: ChatConfig = ChatConfig.from_json(json.dumps(request.json))
+    logger.info('new config ->' + new_config.to_json())
+    current_config = ChatConfig.objects(group_id=group_id).first()
+    if current_config:
+        for attr in current_config:
+            if attr in ['id', 'group_id'] or None == getattr(new_config, attr) or len(getattr(new_config, attr)) == 0:
+                continue
+            logger.info(attr)
+            current_config.update(**{'set__'+attr: getattr(new_config, attr)})
+    else:
+        new_config.group_id = group_id
+        new_config.save()
+    return {'msg': 'success', 'data': {'id': new_config.id}}
+
+
+@chat_group.route('/<group_id>/config', methods=['GET'])
+def get_config(group_id):
+    res = ChatConfig.objects(group_id=group_id).first()
+    logger.info(res)
+    return {'msg': 'success', 'data': res.to_dict()}
+
+
+@chat_group.route('/<group_id>/config', methods=['DELETE'])
+def delete_config(group_id):
+    res = ChatConfig.objects(group_id=group_id).delete()
+    logger.info(res)
+    return {'msg': 'success'}

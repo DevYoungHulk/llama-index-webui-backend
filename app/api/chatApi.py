@@ -66,33 +66,3 @@ def del_chat_msg(group_id, msg_id):
     logger.info(res)
     return {'msg': 'success'}
 
-
-@chat.route('/<group_id>/config', methods=['POST'])
-def create_or_update_config(group_id):
-    new_config: ChatConfig = ChatConfig.from_json(json.dumps(request.json))
-    logger.info('new config ->' + new_config.to_json())
-    current_config = ChatConfig.objects(group_id=group_id).first()
-    if current_config:
-        for attr in current_config:
-            if attr in ['id', 'group_id'] or None == getattr(new_config, attr) or len(getattr(new_config, attr)) == 0:
-                continue
-            logger.info(attr)
-            current_config.update(**{'set__'+attr: getattr(new_config, attr)})
-    else:
-        new_config.group_id = group_id
-        new_config.save()
-    return {'msg': 'success', 'data': {'id': new_config.id}}
-
-
-@chat.route('/<group_id>/config', methods=['GET'])
-def get_config(group_id):
-    res = ChatConfig.objects(group_id=group_id).first()
-    logger.info(res)
-    return {'msg': 'success', 'data': res.to_dict()}
-
-
-@chat.route('/<group_id>/config', methods=['DELETE'])
-def delete_config(group_id):
-    res = ChatConfig.objects(group_id=group_id).delete()
-    logger.info(res)
-    return {'msg': 'success'}

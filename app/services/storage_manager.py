@@ -1,13 +1,13 @@
-import hashlib
-import os
-from configparser import ConfigParser
+import pymongo
 from llama_index.core import StorageContext
 from llama_index.storage.docstore.mongodb import MongoDocumentStore
 from llama_index.storage.index_store.mongodb import MongoIndexStore
 from llama_index.vector_stores.mongodb import MongoDBAtlasVectorSearch
 from llama_index.graph_stores.neo4j import Neo4jGraphStore
 from flask import current_app
-import pymongo
+from ..models.types import *
+import logging
+logger = logging.getLogger('root')
 
 
 def get_vector_storage(namespace) -> StorageContext:
@@ -74,18 +74,18 @@ def create_storage(base_dir) -> StorageContext:
     storage_context = StorageContext.from_defaults(persist_dir=base_dir)
     return storage_context
 
+
 def create_mongo_index_store(uri, db_name, namespace) -> MongoDocumentStore:
     doc_store = MongoIndexStore.from_uri(
         uri, db_name=db_name, index_name=namespace+'.index')
     return doc_store
+
 
 def create_mongo_vector_store(uri, db_name, namespace) -> MongoDBAtlasVectorSearch:
     mongodb_client = pymongo.MongoClient(uri)
     index_store = MongoDBAtlasVectorSearch(
         mongodb_client, db_name=db_name, index_name=namespace+'.vector')
     return index_store
-
-
 
 
 def create_mongo_doc_store(uri, db_name, namespace) -> MongoDocumentStore:
@@ -100,3 +100,45 @@ def create_neo4j_store(uri, username, password):
         node_label="Node"
     )
     return graph_store
+
+
+def config_storages(chat_config: ChatConfig):
+    storages = []
+    for index_config in chat_config.store_configs:
+        storage = config_storage(chat_config, index_config)
+        storages.append(storage)
+    return storages
+
+
+def config_storage(chat_config: ChatConfig, index_config: IndexConfig):
+    storage = create_storage('./storage/'+chat_config.group_id)
+    base_index_s_config: IndexConfig = chat_config.index_store_configs
+    if base_index_s_config.storage_type == IndexStorageType.LOCAL.value:
+        logger.log('use local storage for index')
+    elif base_index_s_config.storage_type == IndexStorageType.MONGO.value:
+        index_store = create_mongo_index_store(
+            index_config.uri,
+            index_config.database,
+            chat_config.group_id)
+        storage.index_store = index_store
+    if index_config.config_type == IndexType.VECTOR.value:
+        if index_config.storage_type == IndexStorageType.MONGO.value:
+            vector_store = create_mongo_vector_store(
+                index_config.uri,
+                index_config.database,
+                chat_config.group_id)
+            storage.vector_store = vector_store
+    elif index_config.config_type == IndexType.SUMMARY.value:
+        if index_config.storage_type == IndexStorageType.MONGO.value:
+            doc_store = create_mongo_doc_store(
+                index_config.uri,
+                index_config.database,
+                chat_config.group_id)
+            storage.docstore = doc_store
+    elif index_config.config_type == IndexType.KNOWLEDGE_GRAPH.value:
+        if index_config.storage_type == IndexStorageType.NEO4j.value:
+            graph_store = create_neo4j_store(index_config.uri,
+                                             index_config.username,
+                                             index_config.password)
+            storage.graph_store = graph_store
+    return storage
