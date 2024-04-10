@@ -338,10 +338,10 @@ paths:
         '405':
           description: Validation exception
 
-  /chat/{groupId}/config:
+  /group/{groupId}/config:
     get:
       tags:
-        - chat
+        - chat group
       summary: Create or update chat model config
       description: Create or update chat model config by Id
       security:
@@ -368,7 +368,7 @@ paths:
           description: Validation exception
     post:
       tags:
-        - chat
+        - chat group
       summary: Create or update chat model config
       description: Create or update chat model config by Id
       security:
@@ -401,7 +401,7 @@ paths:
           description: Validation exception
     delete:
       tags:
-        - chat
+        - chat group
       summary: Create or update chat model config
       description: Create or update chat model config by Id
       security:
