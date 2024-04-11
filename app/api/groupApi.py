@@ -47,7 +47,7 @@ def delete_group(group_id):
     user_id = get_jwt_identity()
     res = ChatGroup.objects(user_id=user_id, id=group_id).first().delete()
     logger.info(res)
-    return {'msg': 'ok'} 
+    return {'msg': 'ok'}
 
 
 @chat_group.route('/<group_id>/config', methods=['POST'])
@@ -57,14 +57,17 @@ def create_or_update_config(group_id):
     current_config = ChatConfig.objects(group_id=group_id).first()
     if current_config:
         for attr in current_config:
-            if attr in ['id', 'group_id'] or None == getattr(new_config, attr) or len(getattr(new_config, attr)) == 0:
+            if attr in ['_id', 'id', 'group_id'] or None == getattr(new_config, attr) or len(getattr(new_config, attr)) == 0:
                 continue
             logger.info(attr)
             current_config.update(**{'set__'+attr: getattr(new_config, attr)})
+        return {'msg': 'success', 'data': {'id': current_config.id}}
+
     else:
         new_config.group_id = group_id
         new_config.save()
-    return {'msg': 'success', 'data': {'id': new_config.id}}
+        return {'msg': 'success', 'data': {'id': new_config.id}}
+
 
 
 @chat_group.route('/<group_id>/config', methods=['GET'])

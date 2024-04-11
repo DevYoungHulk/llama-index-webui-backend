@@ -27,12 +27,11 @@ def create_index_task(user_id, file_id):
     # # logger.info(current_config.MONGO_URI)
     # mongoengine.DEFAULT_CONNECTION_NAME = current_config.MONGO_URI
     # mongoengine.DEFAULT_DATABASE_NAME = current_config.MONGO_DB_NAME
-    mongoengine.connect(current_config.MONGO_DB_NAME, host=current_config.MONGO_URI)
+    # mongoengine.connect(current_config.MONGO_DB_NAME, host=current_config.MONGO_URI)
     try:
-        result = add_index(user_id, file_id)
+        result = add_index_safe(user_id, file_id)
         return result
     except Exception as e:
-        unlockFile(user_id, file_id)
         traceback_text = traceback.format_exc()
         logger.info(traceback_text)
         logger.error('create_index_task error')

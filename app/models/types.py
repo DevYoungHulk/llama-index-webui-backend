@@ -164,6 +164,8 @@ class ChatModelConfig(EmbeddedDocument):
     model_type = EnumField(ModelType, required=True)
     model_name = StringField(max_length=100, required=True)
     openai_api_key = StringField(max_length=100, required=False)
+    ollama_url = StringField(
+        max_length=100, required=False, default="http://localhost:11434")
     # meta = {'collection': 'chat_model_config'}
 
     # def to_dict(self):

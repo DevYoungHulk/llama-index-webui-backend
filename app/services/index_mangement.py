@@ -1,6 +1,6 @@
 import logging
 from .storage_manager import *
-from llama_index.core import load_index_from_storage, Settings
+from llama_index.core import load_index_from_storage, Settings, ServiceContext
 from llama_index.core import VectorStoreIndex,  KnowledgeGraphIndex
 from llama_index.readers.confluence import ConfluenceReader
 from llama_index.readers.file.markdown import MarkdownReader
@@ -15,6 +15,7 @@ from llama_index.core.schema import (
 )
 import pandas as pd
 from typing import List
+from app.services.model_manager import *
 logger = logging.getLogger('root')
 
 
@@ -204,10 +205,11 @@ def add_index(group_id, file_id):
 
         config: ChatConfig = ChatConfig.objects(group_id=group_id).first()
         storages = config_storages(config)
-
+        storage: StorageContext
         for storage in storages:
             storage_index: VectorStoreIndex | KnowledgeGraphIndex = None
-
+            serviceContext = ServiceContext.from_defaults(llm=get_llm_model(
+                config.chat_model), embed_model=get_embbedding_model(config.embedded_model))
             try:
                 storage_index = load_index_from_storage(storage)
             except Exception as e:
@@ -215,21 +217,23 @@ def add_index(group_id, file_id):
                 logger.error(e)
                 if storage.vector_store:
                     storage_index = VectorStoreIndex.from_documents(
-                        documents=[], storage_context=storage, show_progress=True)
+                        documents=[], storage_context=storage, show_progress=True, service_context=serviceContext)
                     file: None | BaseFile = BaseFile.objects(
                         group_id=group_id, id=file_id).first()
                 elif storage.graph_store:
                     storage_index = KnowledgeGraphIndex.from_documents(
-                        documents=[], storage_context=storage, show_progress=True)
+                        documents=[], storage_context=storage, show_progress=True, service_context=serviceContext)
 
             if not storage_index:
                 return {'msg': 'storage not exsit'}
             if storage.vector_store:
                 storage_index.insert_nodes(nodes)
+                storage.persist(persistDir(config.group_id))
             elif storage.graph_store:
                 storage_index.build_index_from_nodes(nodes)
-
-            storage.persist()
+                storage.persist(persistDir(config.group_id))
+            else:
+                storage.persist(persistDir(config.group_id))
 
         file.node_ids = node_ids
         file.ref_doc_ids = ref_doc_ids

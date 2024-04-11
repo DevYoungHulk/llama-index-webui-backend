@@ -14,6 +14,7 @@ from llama_index.embeddings.ollama import OllamaEmbedding
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from app.models.types import *
 from .storage_manager import *
+from app.services.model_manager import *
 import traceback
 from ..models.types import BaseFile
 from llama_index.core.indices.base import BaseIndex
@@ -133,46 +134,33 @@ def get_gloabl_chat_agent_instance():
 
 
 def create_agent(chat_config: ChatConfig):
-    tools = [QueryEngineTool]
-    index_config: IndexConfig
-    storages = config_storages(chat_config)
-    for storage in storages:
-        index: BaseIndex = load_index_from_storage(storage)
-        tool = QueryEngineTool(
-            query_engine=index.as_query_engine(
-                similarity_top_k=index_config.similarity_top_k),
-            metadata=ToolMetadata(
-                name='tool_'+index_config.id,
-                description=(
-                    index_config.description
-                ),
-            ),
-        )
-        tools.append(tool)
-
+    tools = query_engine_tools(chat_config)
     logger.info('tools -> '+str(len(tools)))
     llm_model_config: ChatModelConfig = chat_config.chat_model
-    llm: LLM
-    if llm_model_config.model_type == ModelType.OPENAI.value:
+    llm: LLM = get_llm_model(llm_model_config)
+    if llm_model_config.model_type == ModelType.OPENAI:
         llm = OpenAI(
             temperature=0.0,
             model_name=llm_model_config.model_name,
             api_key=llm_model_config.openai_api_key,
         )
-    elif llm_model_config.model_type == ModelType.HUGGINGFACE.value:
+    elif llm_model_config.model_type == ModelType.HUGGINGFACE:
         tokenizer = AutoTokenizer.from_pretrained(
-            llm_model_config.model_name, torch_dtype="auto",    device_map="auto", mirror="tuna")
+            llm_model_config.model_name, torch_dtype="auto", device_map="auto", mirror="tuna")
         model = AutoModelForCausalLM.from_pretrained(
             llm_model_config.model_name)
         llm = HuggingFaceLLM(model=model, tokenizer=tokenizer)
-    elif llm_model_config.model_type == ModelType.OLLAMA.value:
+    elif llm_model_config.model_type == ModelType.OLLAMA:
         llm = Ollama(temperature=0.1,
                      model=llm_model_config.model_name, request_timeout=300.0)
+    else:
+        raise Exception(f'model type {llm_model_config.model_type} not support')
     chatAgent = ReActAgent.from_tools(
         tools=tools,
         llm=llm,
         verbose=True,
         system_prompt=chat_config.system_prompt,
+
     )
 
     return chatAgent
