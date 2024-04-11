@@ -33,9 +33,13 @@ def chat_(group_id):
         if hasattr(response, 'response_txt'):
             logger.info('-------response.response_txt----------')
             logger.info(response.response_txt)
+        source_nodes = []
         if hasattr(response, 'source_nodes'):
             logger.info('-------response.source_nodes----------')
             logger.info(response.source_nodes)
+            for node in response.source_nodes:
+                source_nodes.append(
+                    {'id': node.id_, 'text': node.text, 'score': node.score})
         answer = str(response)
         # answer = str(get_gloabl_chat_agent_instance().loadQueryEngineTool(user_id)[0].query_engine.query(question))
     except Exception as e:
@@ -48,7 +52,7 @@ def chat_(group_id):
     chat_a = ChatHistory(
         group_id=group_id, role=MessageRole.ASSISTANT, content=answer, date=date_a)
     chat_a.save()
-    return {'msg': 'success', 'data': answer}, 200
+    return {'msg': 'success', 'data': {'answer': answer, 'source_nodes': source_nodes}}, 200
 
 
 @chat.route('/<group_id>', methods=['GET'])
