@@ -5,7 +5,7 @@ from llama_index.core.types import MessageRole
 from app.models.types import *
 from flask import Blueprint, request
 import logging
-from app.services.chat_context import get_gloabl_chat_agent_instance, create_agent
+from app.services.chat_context import create_agent
 from flask_jwt_extended import jwt_required, get_jwt_identity
 import traceback
 chat = Blueprint('chat', __name__)
@@ -38,8 +38,11 @@ def chat_(group_id):
             logger.info('-------response.source_nodes----------')
             logger.info(response.source_nodes)
             for node in response.source_nodes:
+                # if node.score < 0.5:
+                #     continue
+                file = BaseFile.objects(node_ids__contains=node.id_).first()
                 source_nodes.append(
-                    {'id': node.id_, 'text': node.text, 'score': node.score})
+                    {'id': node.id_, 'text': node.text, 'score': node.score, 'file_id': file.id, 'file_name': file.file_name})
         answer = str(response)
         # answer = str(get_gloabl_chat_agent_instance().loadQueryEngineTool(user_id)[0].query_engine.query(question))
     except Exception as e:

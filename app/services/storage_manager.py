@@ -1,5 +1,8 @@
 import pymongo
-from llama_index.core import StorageContext, load_index_from_storage, load_graph_from_storage, load_indices_from_storage
+from llama_index.core import StorageContext, load_index_from_storage, load_graph_from_storage, load_indices_from_storage, get_response_synthesizer
+from llama_index.core.callbacks import CallbackManager
+from llama_index.core.query_engine import RetrieverQueryEngine
+from llama_index.core.postprocessor import SimilarityPostprocessor
 from llama_index.storage.docstore.mongodb import MongoDocumentStore
 from llama_index.storage.index_store.mongodb import MongoIndexStore
 from llama_index.vector_stores.mongodb import MongoDBAtlasVectorSearch
@@ -11,7 +14,7 @@ from typing import List
 from ..models.types import *
 import logging
 logger = logging.getLogger('root')
-
+import traceback
 
 def get_vector_storage(namespace) -> StorageContext:
     db_name = current_app.config['MONGO_DB_NAME']
@@ -74,7 +77,8 @@ def get_knowledge_storage(namespace) -> StorageContext:
 
 
 def create_storage(group_id) -> StorageContext:
-    storage_context = StorageContext.from_defaults(persist_dir=persistDir(group_id))
+    storage_context = StorageContext.from_defaults(
+        persist_dir=persistDir(group_id))
     return storage_context
 
 
@@ -141,7 +145,7 @@ def config_storage(chat_config: ChatConfig, index_config: IndexConfig):
             index_config.database,
             chat_config.group_id)
         storage = StorageContext.from_defaults(index_store=index_store)
-    
+
     if index_config.config_type == IndexType.VECTOR:
         if index_config.storage_type == IndexStorageType.MONGO:
             vector_store = create_mongo_vector_store(
@@ -171,9 +175,18 @@ def query_engine_tools(chat_config: ChatConfig):
         storage = config_storage(chat_config, index_config)
         try:
             index: BaseIndex = load_index_from_storage(storage)
+            response_synthesizer = get_response_synthesizer()
+            node_postprocessor = SimilarityPostprocessor(
+                        similarity_cutoff=0.5)
+            node_postprocessor.callback_manager = CallbackManager()
             tool = QueryEngineTool(
-                query_engine=index.as_query_engine(
-                    similarity_top_k=index_config.similarity_top_k),
+                query_engine=RetrieverQueryEngine(
+                    retriever=index.as_retriever(
+                        similarity_top_k=index_config.similarity_top_k,
+                    ),
+                    response_synthesizer=response_synthesizer,
+                    node_postprocessors= [node_postprocessor]
+                ),
                 metadata=ToolMetadata(
                     name='tool_'+index_config.config_type.value,
                     description=(
@@ -183,6 +196,8 @@ def query_engine_tools(chat_config: ChatConfig):
             )
             tools.append(tool)
         except Exception as e:
+            traceback_text = traceback.format_exc()
             logger.info('load index from storage error')
+            logger.error(traceback_text)
             logger.info(e)
     return tools
