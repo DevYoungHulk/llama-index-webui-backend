@@ -11,7 +11,7 @@
             "program": "main.py",
             "request": "launch",
             "console": "integratedTerminal",
-            "justMyCode": true
+            "justMyCode": false
         }
     ]
 }
